@@ -8,7 +8,7 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './app.js';
+import App from './app.jsx';
 
 // Obtener el elemento del DOM donde montar la app
 const rootElement = document.getElementById('root');

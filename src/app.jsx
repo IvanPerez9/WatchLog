@@ -8,10 +8,10 @@ import React, { useState, useEffect } from 'react';
 import { Film } from 'lucide-react';
 import { moviesApi, statusesApi } from './api/supabase.js';
 import { tmdbApi } from './api/tmdb.js';
-import MovieCard from './components/MovieCard.js';
-import AddMovie from './components/AddMovie.js';
-import Filters from './components/Filters.js';
-import Stats from './components/Stats.js';
+import MovieCard from './components/MovieCard.jsx';
+import AddMovie from './components/AddMovie.jsx';
+import Filters from './components/Filters.jsx';
+import Stats from './components/Stats.jsx';
 
 const App = () => {
   // Estado global de la aplicación (como variables de instancia)
