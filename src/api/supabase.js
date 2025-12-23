@@ -1,6 +1,9 @@
 /**
+ * Cliente HTTP para Supabase
+ * Similar a un @Service o @Repository en Spring Boot
  * 
- * Supabase expone una REST API automática basada en schema de la BBDD
+ * Supabase expone una REST API automática basada en tu schema
+ * Es como si tuvieras un CRUD REST generado automáticamente
  */
 
 import config from '../config.js';
@@ -10,35 +13,95 @@ import config from '../config.js';
  * Similar a RestTemplate.exchange() en Spring
  */
 const supabaseFetch = async (endpoint, options = {}) => {
-  const response = await fetch(`${config.supabase.url}/rest/v1/${endpoint}`, {
+  const url = `${config.supabase.url}/rest/v1/${endpoint}`;
+  console.log('🔗 Supabase URL:', url);
+  
+  const response = await fetch(url, {
     ...options,
     headers: {
       'apikey': config.supabase.anonKey,
       'Authorization': `Bearer ${config.supabase.anonKey}`,
       'Content-Type': 'application/json',
-      'Prefer': 'return=representation', // Para que devuelva el objeto creado/actualizado
+      'Prefer': 'return=representation',
       ...options.headers,
     },
   });
 
+  console.log('📡 Response status:', response.status);
+
   if (!response.ok) {
+    const errorText = await response.text();
+    console.error('❌ Supabase error:', errorText);
     throw new Error(`Supabase error: ${response.statusText}`);
   }
 
-  return response.json();
+  const data = await response.json();
+  console.log('✅ Data received:', data);
+  return data;
 };
 
 /**
  * API de Movies - CRUD completo
  * Como un MovieRepository o MovieService
+ * 
+ * IMPORTANTE: Las tablas en MAYÚSCULAS necesitan comillas dobles en Supabase
  */
 export const moviesApi = {
   /**
-   * GET /movies - Listar todas las películas con sus estados
-   * SQL: SELECT m.*, s.description FROM movies m JOIN statuses s ON m.status_id = s.id
+   * GET /movies - Listar películas con paginación
    */
-  getAll: async () => {
-    return supabaseFetch('movies?select=*,statuses(description)&order=created_at.desc');
+  getAll: async (page = 0, pageSize = 20, statusId = null) => {
+    console.log('📞 Llamando a getAll con:', { page, pageSize, statusId });
+    
+    const from = page * pageSize;
+    const to = from + pageSize - 1;
+    
+    // Construir query base con JOIN a status
+    let query = `movies?select=id,title,year,poster_path,status_id,status!inner(description)&order=id.desc`;
+    
+    // Añadir filtro por status si es necesario
+    if (statusId !== null) {
+      query += `&status_id=eq.${statusId}`;
+    }
+    
+    console.log('🔗 Query final:', query);
+    
+    try {
+      // Hacer la petición con header Range para paginación
+      const result = await supabaseFetch(query, {
+        headers: {
+          'Range': `${from}-${to}`,
+        }
+      });
+      
+      console.log('📦 Resultado:', result);
+      console.log('📊 Total items:', result?.length || 0);
+      
+      return result;
+    } catch (error) {
+      console.error('❌ Error en getAll:', error);
+      return [];
+    }
+  },
+
+  /**
+   * GET /movies - Contar total de películas (para paginación)
+   * @param {number|null} statusId - Filtrar por estado (null = todos)
+   */
+  count: async (statusId = null) => {
+    let query = 'movies?select=count';
+    
+    if (statusId !== null) {
+      query += `&status_id=eq.${statusId}`;
+    }
+    
+    const result = await supabaseFetch(query, {
+      headers: {
+        'Prefer': 'count=exact',
+      }
+    });
+    
+    return result;
   },
 
   /**
@@ -76,13 +139,13 @@ export const moviesApi = {
 };
 
 /**
- * API de Statuses - Solo lectura
+ * API de Status - Solo lectura
  */
 export const statusesApi = {
   /**
-   * GET /statuses - Listar todos los estados
+   * GET /status - Listar todos los estados
    */
   getAll: async () => {
-    return supabaseFetch('statuses?select=*');
+    return supabaseFetch('status?select=*');
   },
 };

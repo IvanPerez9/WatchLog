@@ -14,7 +14,7 @@ import Filters from './components/Filters.jsx';
 import Stats from './components/Stats.jsx';
 
 const App = () => {
-  // Estado global de la aplicación (como variables de instancia)
+  // Estado global de la aplicación
   const [movies, setMovies] = useState([]);
   const [statuses, setStatuses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,14 +22,25 @@ const App = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [showImport, setShowImport] = useState(false);
   const [csvData, setCsvData] = useState('');
+  
+  // Estados de paginación
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalMovies, setTotalMovies] = useState(0);
+  const pageSize = 20;
 
   /**
-   * useEffect se ejecuta cuando el componente se monta
-   * Similar a @PostConstruct en Spring
+   * useEffect se ejecuta cuando el componente se monta o cuando cambian las dependencias
    */
   useEffect(() => {
     loadInitialData();
   }, []);
+
+  // Recargar películas cuando cambia la página o el filtro
+  useEffect(() => {
+    if (statuses.length > 0) {
+      loadMovies();
+    }
+  }, [currentPage, filterStatus]);
 
   /**
    * Cargar datos iniciales (estados y películas)
@@ -56,11 +67,36 @@ const App = () => {
   };
 
   /**
-   * Cargar películas desde Supabase
+   * Cargar películas desde Supabase con paginación
    */
   const loadMovies = async () => {
-    const data = await moviesApi.getAll();
-    setMovies(data || []);
+    try {
+      setLoading(true);
+      console.log('🔍 Cargando películas - Página:', currentPage, 'Filtro:', filterStatus);
+      
+      const statusId = filterStatus === 'all' ? null : parseInt(filterStatus);
+      const data = await moviesApi.getAll(currentPage, pageSize, statusId);
+      
+      console.log('📦 Datos recibidos:', data);
+      console.log('📊 Total películas en página:', data?.length || 0);
+      
+      setMovies(data || []);
+      
+      // Calcular total aproximado
+      setTotalMovies(854); // Temporal - luego haremos count real
+    } catch (error) {
+      console.error('Error loading movies:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Obtener total de películas (para calcular páginas)
+   */
+  const loadTotalCount = async () => {
+    // Por ahora usamos el total fijo
+    // TODO: Implementar count real desde Supabase
   };
 
   /**
@@ -71,13 +107,11 @@ const App = () => {
    */
   const handleAddMovie = async (title) => {
     try {
-      // Buscar en TMDB
       const tmdbData = await tmdbApi.searchMovie(title);
       
       // Obtener el estado "Pendiente" por defecto
       const pendingStatus = statuses.find((s) => s.description === 'Pendiente');
 
-      // Crear en Supabase
       await moviesApi.create({
         title: title,
         year: tmdbData?.year || null,
@@ -85,7 +119,6 @@ const App = () => {
         status_id: pendingStatus?.id || 1,
       });
 
-      // Recargar lista
       await loadMovies();
     } catch (error) {
       console.error('Error adding movie:', error);
@@ -162,16 +195,33 @@ const App = () => {
   };
 
   /**
-   * Filtrar películas según búsqueda y estado
+   * Filtrar películas según búsqueda (solo en la página actual)
    */
   const filteredMovies = movies.filter((movie) => {
     const matchesSearch = movie.title
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
-    const matchesFilter =
-      filterStatus === 'all' || movie.status_id === parseInt(filterStatus);
-    return matchesSearch && matchesFilter;
+    return matchesSearch;
   });
+
+  const totalPages = Math.ceil(totalMovies / pageSize);
+
+  const handlePrevPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages - 1) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handleFilterChange = (newFilter) => {
+    setFilterStatus(newFilter);
+    setCurrentPage(0); // Reset a primera página
+  };
 
   // Render de la UI
   return (
@@ -231,7 +281,7 @@ const App = () => {
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             filterStatus={filterStatus}
-            onFilterChange={setFilterStatus}
+            onFilterChange={handleFilterChange}
             statuses={statuses}
           />
         </div>
@@ -249,17 +299,42 @@ const App = () => {
             No hay películas que mostrar
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {filteredMovies.map((movie) => (
-              <MovieCard
-                key={movie.id}
-                movie={movie}
-                statuses={statuses}
-                onStatusChange={handleStatusChange}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {filteredMovies.map((movie) => (
+                <MovieCard
+                  key={movie.id}
+                  movie={movie}
+                  statuses={statuses}
+                  onStatusChange={handleStatusChange}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
+
+            {/* Controles de paginación */}
+            <div className="mt-8 flex items-center justify-center gap-4">
+              <button
+                onClick={handlePrevPage}
+                disabled={currentPage === 0}
+                className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                ← Anterior
+              </button>
+              
+              <span className="text-white">
+                Página {currentPage + 1} de {totalPages || 1}
+              </span>
+              
+              <button
+                onClick={handleNextPage}
+                disabled={currentPage >= totalPages - 1}
+                className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                Siguiente →
+              </button>
+            </div>
+          </>
         )}
       </div>
     </div>
