@@ -15,7 +15,8 @@ import Stats from './components/Stats.jsx';
 
 const App = () => {
   // Estado global de la aplicación
-  const [movies, setMovies] = useState([]);
+  const [movies, setMovies] = useState([]);  // Películas de la página actual (20)
+  const [allMovies, setAllMovies] = useState([]);  // Todas las películas (para búsqueda y stats)
   const [statuses, setStatuses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -39,6 +40,7 @@ const App = () => {
   useEffect(() => {
     if (statuses.length > 0) {
       loadMovies();
+      loadAllMovies();
     }
   }, [currentPage, filterStatus]);
 
@@ -50,6 +52,9 @@ const App = () => {
       setLoading(true);
       await loadStatuses();
       await loadMovies();
+      
+      // Cargar todas las películas en background
+      loadAllMovies();
     } catch (error) {
       console.error('Error loading initial data:', error);
       alert('Error al cargar datos. Revisa la consola.');
@@ -67,7 +72,7 @@ const App = () => {
   };
 
   /**
-   * Cargar películas desde Supabase con paginación
+   * Cargar películas desde Supabase con paginación (para mostrar 20 por página)
    */
   const loadMovies = async () => {
     try {
@@ -88,6 +93,21 @@ const App = () => {
       console.error('Error loading movies:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  /**
+   * Cargar TODAS las películas sin paginación (para búsqueda y stats)
+   */
+  const loadAllMovies = async () => {
+    try {
+      const statusId = filterStatus === 'all' ? null : parseInt(filterStatus);
+      
+      // Cargar todas sin paginación
+      const data = await moviesApi.getAll(0, 10000, statusId);
+      setAllMovies(data || []);
+    } catch (error) {
+      console.error('Error loading all movies:', error);
     }
   };
 
@@ -200,16 +220,21 @@ const App = () => {
   };
 
   /**
-   * Filtrar películas según búsqueda (solo en la página actual)
+   * Filtrar películas según búsqueda (en TODAS las películas)
+   * Aplica paginación después de filtrar
    */
-  const filteredMovies = movies.filter((movie) => {
+  const searchedMovies = allMovies.filter((movie) => {
     const matchesSearch = movie.title
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
     return matchesSearch;
   });
 
-  const totalPages = Math.ceil(totalMovies / pageSize);
+  // Aplicar paginación al resultado de búsqueda
+  const from = currentPage * pageSize;
+  const to = from + pageSize;
+  const filteredMovies = searchedMovies.slice(from, to);
+  const searchTotalPages = Math.ceil(searchedMovies.length / pageSize);
 
   const handlePrevPage = () => {
     if (currentPage > 0) {
@@ -293,7 +318,7 @@ const App = () => {
 
         {/* Estadísticas */}
         <div className="mb-6">
-          <Stats movies={movies} statuses={statuses} />
+          <Stats movies={allMovies} statuses={statuses} />
         </div>
 
         {/* Lista de películas */}
@@ -328,12 +353,12 @@ const App = () => {
               </button>
               
               <span className="text-white">
-                Página {currentPage + 1} de {totalPages || 1}
+                Página {currentPage + 1} de {searchTotalPages || 1}
               </span>
               
               <button
                 onClick={handleNextPage}
-                disabled={currentPage >= totalPages - 1}
+                disabled={currentPage >= searchTotalPages - 1}
                 className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
               >
                 Siguiente →
