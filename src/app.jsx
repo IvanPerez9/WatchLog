@@ -82,8 +82,8 @@ const App = () => {
       
       setMovies(data || []);
       
-      // Calcular total aproximado
-      setTotalMovies(854); // Temporal - luego haremos count real
+      // Obtener el total real de películas
+      await loadTotalCount(statusId);
     } catch (error) {
       console.error('Error loading movies:', error);
     } finally {
@@ -94,9 +94,14 @@ const App = () => {
   /**
    * Obtener total de películas (para calcular páginas)
    */
-  const loadTotalCount = async () => {
-    // Por ahora usamos el total fijo
-    // TODO: Implementar count real desde Supabase
+  const loadTotalCount = async (statusId = null) => {
+    try {
+      const data = await moviesApi.count(statusId);
+      const count = data[0].count;
+      setTotalMovies(count);
+    } catch (error) {
+      console.error('Error loading total count:', error);
+    }
   };
 
   /**
