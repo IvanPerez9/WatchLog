@@ -325,13 +325,23 @@ const App = () => {
 
   /**
    * Filtrar películas según búsqueda (en TODAS las películas)
+   * Busca por título o año
    * Aplica paginación después de filtrar
    */
   const searchedMovies = allMovies.filter((movie) => {
-    const matchesSearch = movie.title
+    const searchLower = searchTerm.toLowerCase().trim();
+    
+    // Buscar por título
+    const matchesTitle = movie.title
       .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    return matchesSearch;
+      .includes(searchLower);
+    
+    // Buscar por año (si el término de búsqueda es un número)
+    const matchesYear = searchLower && /^\d+$/.test(searchLower) && 
+      movie.year && 
+      movie.year.toString() === searchLower;
+    
+    return matchesTitle || matchesYear;
   });
 
   // Aplicar paginación al resultado de búsqueda
@@ -445,15 +455,17 @@ const App = () => {
           <Filters
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
-            filterStatus={filterStatus}
-            onFilterChange={handleFilterChange}
-            statuses={statuses}
           />
         </div>
 
         {/* Estadísticas */}
         <div className="mb-6">
-          <Stats movies={allMovies} statuses={statuses} />
+          <Stats 
+            movies={allMovies} 
+            statuses={statuses}
+            filterStatus={filterStatus}
+            onFilterChange={handleFilterChange}
+          />
         </div>
 
         {/* Status de rellenar posters */}
