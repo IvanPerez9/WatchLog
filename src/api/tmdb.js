@@ -14,7 +14,7 @@ export const tmdbApi = {
    * GET /search/movie?query={title}
    * 
    * @param {string} title - Título de la película
-   * @returns {Promise<Object|null>} - {year, poster_path} o null si no se encuentra
+   * @returns {Promise<Object|null>} - {year, poster_path (URL completa)} o null si no se encuentra
    */
   searchMovie: async (title) => {
     try {
@@ -32,9 +32,14 @@ export const tmdbApi = {
       // Si encontramos resultados, devolvemos el primero
       if (data.results && data.results.length > 0) {
         const movie = data.results[0];
+        // Construir URL completa del poster si existe
+        const posterPath = movie.poster_path 
+          ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` 
+          : null;
+        
         return {
           year: movie.release_date ? new Date(movie.release_date).getFullYear() : null,
-          poster_path: movie.poster_path || null,
+          poster_path: posterPath,
           tmdb_id: movie.id,
           overview: movie.overview || null,
         };

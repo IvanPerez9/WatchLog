@@ -11,16 +11,21 @@ import config from '../config.js';
 /**
  * Función auxiliar para hacer fetch a Supabase
  * Similar a RestTemplate.exchange() en Spring
+ * Para GET: usa anonKey (público)
+ * Para POST/PATCH/DELETE: usa anonKey (ya que las RLS están permitidas públicamente)
  */
 const supabaseFetch = async (endpoint, options = {}) => {
   const url = `${config.supabase.url}/rest/v1/${endpoint}`;
   console.log('🔗 Supabase URL:', url);
   
+  // Siempre usar anonKey (las RLS están configuradas para permitir todo públicamente)
+  const apiKey = config.supabase.anonKey;
+  
   const response = await fetch(url, {
     ...options,
     headers: {
-      'apikey': config.supabase.anonKey,
-      'Authorization': `Bearer ${config.supabase.anonKey}`,
+      'apikey': apiKey,
+      'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
       'Prefer': 'return=representation',
       ...options.headers,

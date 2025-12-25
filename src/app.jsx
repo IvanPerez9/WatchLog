@@ -12,6 +12,7 @@ import MovieCard from './components/MovieCard.jsx';
 import AddMovie from './components/AddMovie.jsx';
 import Filters from './components/Filters.jsx';
 import Stats from './components/Stats.jsx';
+import { useAuth } from './auth/useAuth.js';
 
 const App = () => {
   // Estado global de la aplicación
@@ -28,6 +29,14 @@ const App = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalMovies, setTotalMovies] = useState(0);
   const pageSize = 20;
+
+  // Auth
+  const { user, login, logout } = useAuth();
+  const [token, setToken] = useState('');
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
+  const [fillingPosters, setFillingPosters] = useState(false);
+  const [posterStatus, setPosterStatus] = useState('');
 
   /**
    * useEffect se ejecuta cuando el componente se monta o cuando cambian las dependencias
@@ -61,6 +70,34 @@ const App = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  /**
+   * Manejar login con Access Token desde el modal
+   */
+  const handleLoginModal = async () => {
+    const error = await login(token);
+    if (!error) {
+      setShowLoginModal(false);
+      setToken('');
+      // Ejecutar la acción pendiente si existe
+      if (pendingAction) {
+        pendingAction();
+        setPendingAction(null);
+      }
+    }
+  };
+
+  /**
+   * Verificar autenticación antes de hacer acciones
+   */
+  const requireAuth = (action) => {
+    if (!user) {
+      setPendingAction(() => action);
+      setShowLoginModal(true);
+      return false;
+    }
+    return true;
   };
 
   /**
@@ -125,16 +162,78 @@ const App = () => {
   };
 
   /**
+   * Buscar y rellenar posters y años faltantes de forma asíncrona en background
+   */
+  const fillMissingPosters = async (moviesToProcess) => {
+    setFillingPosters(true);
+    setPosterStatus('Preparando búsqueda...');
+    
+    const moviesWithoutPoster = moviesToProcess
+      .filter((m) => !m.poster_path)
+      .sort((a, b) => b.id - a.id);
+    
+    if (moviesWithoutPoster.length === 0) {
+      setPosterStatus('✅ Todas las películas tienen poster');
+      setFillingPosters(false);
+      return;
+    }
+
+    setPosterStatus(`🎬 Encontradas ${moviesWithoutPoster.length} películas sin poster. Iniciando búsqueda...`);
+    console.log(`🎬 Encontradas ${moviesWithoutPoster.length} películas sin poster`);
+
+    let updated = 0;
+    for (const movie of moviesWithoutPoster) {
+      try {
+        setPosterStatus(`⏳ Buscando: ${movie.title}...`);
+        console.log(`📽️ Buscando poster para: ${movie.title}`);
+        
+        const tmdbData = await tmdbApi.searchMovie(movie.title);
+
+        if (tmdbData?.poster_path || tmdbData?.year) {
+          const updates = {};
+          
+          if (tmdbData.poster_path) {
+            updates.poster_path = tmdbData.poster_path;
+            console.log(`✅ Encontrado poster para: ${movie.title}`);
+          }
+          
+          if (tmdbData.year && !movie.year) {
+            updates.year = tmdbData.year;
+            console.log(`✅ Encontrado año para: ${movie.title} (${tmdbData.year})`);
+          }
+          
+          if (Object.keys(updates).length > 0) {
+            await moviesApi.update(movie.id, updates);
+            updated++;
+            setPosterStatus(`✅ ${updated}/${moviesWithoutPoster.length} películas actualizadas`);
+          }
+        } else {
+          console.log(`⚠️ No se encontró información para: ${movie.title}`);
+          setPosterStatus(`⚠️ Sin información: ${movie.title}`);
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      } catch (error) {
+        console.error(`❌ Error procesando ${movie.title}:`, error);
+        setPosterStatus(`❌ Error en: ${movie.title}`);
+      }
+    }
+
+    setPosterStatus(`🎉 Completado! ${updated} películas actualizadas`);
+    console.log('🎉 Proceso completado');
+    await loadAllMovies();
+    setFillingPosters(false);
+  };
+
+  /**
    * Añadir una nueva película
-   * 1. Busca info en TMDB
-   * 2. Crea en Supabase
-   * 3. Recarga la lista
    */
   const handleAddMovie = async (title) => {
+    if (!requireAuth(() => handleAddMovie(title))) return;
+    
     try {
       const tmdbData = await tmdbApi.searchMovie(title);
       
-      // Obtener el estado "Pendiente" por defecto
       const pendingStatus = statuses.find((s) => s.description === 'Pendiente');
 
       await moviesApi.create({
@@ -155,6 +254,8 @@ const App = () => {
    * Actualizar el estado de una película
    */
   const handleStatusChange = async (movieId, newStatusId) => {
+    if (!requireAuth(() => handleStatusChange(movieId, newStatusId))) return;
+    
     try {
       await moviesApi.update(movieId, { status_id: newStatusId });
       await loadMovies();
@@ -168,6 +269,8 @@ const App = () => {
    * Eliminar una película
    */
   const handleDelete = async (movieId) => {
+    if (!requireAuth(() => handleDelete(movieId))) return;
+    
     if (!confirm('¿Eliminar esta película?')) return;
 
     try {
@@ -181,9 +284,10 @@ const App = () => {
 
   /**
    * Importar películas desde CSV
-   * Formato: Título,Estado
    */
   const handleImportCSV = async () => {
+    if (!requireAuth(() => handleImportCSV())) return;
+    
     if (!csvData.trim()) return;
 
     try {
@@ -243,17 +347,17 @@ const App = () => {
   };
 
   const handleNextPage = () => {
-    if (currentPage < totalPages - 1) {
+    if (currentPage < searchTotalPages - 1) {
       setCurrentPage(currentPage + 1);
     }
   };
 
   const handleFilterChange = (newFilter) => {
     setFilterStatus(newFilter);
-    setCurrentPage(0); // Reset a primera página
+    setCurrentPage(0);
   };
 
-  // Render de la UI
+  // Render de la UI - Siempre mostrar la app (sin pantalla de login al inicio)
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -263,12 +367,43 @@ const App = () => {
             <Film className="w-10 h-10 text-purple-400" />
             <h1 className="text-4xl font-bold text-white">WatchLog</h1>
           </div>
-          <button
-            onClick={() => setShowImport(!showImport)}
-            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition"
-          >
-            Importar CSV
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                if (!user) {
+                  setPendingAction(() => () => fillMissingPosters(allMovies));
+                  setShowLoginModal(true);
+                } else {
+                  fillMissingPosters(allMovies);
+                }
+              }}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-sm"
+              title="Busca posters faltantes en background"
+            >
+              🎬 Rellenar Posters
+            </button>
+            <button
+              onClick={() => {
+                if (!user) {
+                  setPendingAction(() => () => setShowImport(!showImport));
+                  setShowLoginModal(true);
+                } else {
+                  setShowImport(!showImport);
+                }
+              }}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition"
+            >
+              Importar CSV
+            </button>
+            {user && (
+              <button
+                onClick={logout}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition text-sm"
+              >
+                Logout
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Sección de importar CSV */}
@@ -321,6 +456,13 @@ const App = () => {
           <Stats movies={allMovies} statuses={statuses} />
         </div>
 
+        {/* Status de rellenar posters */}
+        {fillingPosters && (
+          <div className="bg-slate-800 rounded-lg p-4 mb-6 border border-blue-500">
+            <p className="text-white text-sm">{posterStatus}</p>
+          </div>
+        )}
+
         {/* Lista de películas */}
         {loading ? (
           <div className="text-center text-white py-12">Cargando películas...</div>
@@ -367,6 +509,48 @@ const App = () => {
           </>
         )}
       </div>
+
+      {/* Modal de Login */}
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 rounded-lg p-8 w-full max-w-md">
+            <h2 className="text-white text-xl font-semibold mb-6">Necesitas autenticarte</h2>
+            
+            <div className="space-y-4">
+              <input
+                type="password"
+                placeholder="Pega tu Access Token"
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                className="w-full bg-slate-700 text-white p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono text-sm"
+              />
+              
+              <div className="flex gap-2">
+                <button
+                  onClick={handleLoginModal}
+                  className="flex-1 px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition font-semibold"
+                >
+                  Entrar
+                </button>
+                <button
+                  onClick={() => {
+                    setShowLoginModal(false);
+                    setToken('');
+                    setPendingAction(null);
+                  }}
+                  className="flex-1 px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+            
+            <p className="text-slate-400 text-xs mt-4 text-center">
+              Supabase → Settings → API → anon key
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
