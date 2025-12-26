@@ -61,7 +61,6 @@ Web application to manage your movie library. Track watched, pending, and in-pro
 
 ### Data and Synchronization
 - 🖼️ **Automatic Posters** - TMDB synchronization
-- 📥 **CSV Import** - Bulk load multiple movies at once
 - 🔄 **Background Sync** - Non-blocking interface
 
 ### Interface
@@ -130,7 +129,6 @@ Enter your token to:
 - ➕ Add new movies
 - ✏️ Change movie status
 - 🗑️ Delete movies
-- 📤 Import CSV
 - 🔄 Sync posters with TMDB
 
 ## 🔐 Authentication System
@@ -225,6 +223,7 @@ See [LICENSE](LICENSE.md) for more details.
 ## 🚀 Future Improvements
 
 **Phase 2 - Content Expansion:**
+- [ ] Export as CSV
 - [ ] Support for **TV Series** - Same system as movies
 - [ ] Support for **Books** - Manage your reading library
 - [ ] Integrated APIs for Google Books and TheTVDB
