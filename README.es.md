@@ -2,6 +2,12 @@
 
 Aplicación web para gestionar tu biblioteca de películas. Trackea películas vistas, pendientes y en proceso con sincronización automática con TMDB.
 
+📖 **Lee esto en**: [English](README.md)
+
+## 🌐 Demo en vivo
+
+[https://watchlog-vtlx.netlify.app/](https://watchlog-vtlx.netlify.app/) - Alojado en Netlify
+
 ## 📋 Tabla de contenidos
 
 - [Descripción](#descripción)

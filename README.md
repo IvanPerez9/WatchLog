@@ -2,6 +2,12 @@
 
 Web application to manage your movie library. Track watched, pending, and in-progress movies with automatic TMDB synchronization.
 
+📖 **Read this in**: [Español](README.es.md)
+
+## 🌐 Live Demo
+
+[https://watchlog-vtlx.netlify.app/](https://watchlog-vtlx.netlify.app/) - Hosted on Netlify
+
 ## 📋 Table of Contents
 
 - [Description](#description)
