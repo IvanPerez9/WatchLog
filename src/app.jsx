@@ -13,6 +13,7 @@ import AddMovie from './components/AddMovie.jsx';
 import Filters from './components/Filters.jsx';
 import Stats from './components/Stats.jsx';
 import { useAuth } from './auth/useAuth.js';
+import { BUTTON_STYLES } from './styles/buttonStyles.js';
 
 const App = () => {
   // Estado global de la aplicación
@@ -82,8 +83,10 @@ const App = () => {
       setToken('');
       // Ejecutar la acción pendiente si existe
       if (pendingAction) {
-        pendingAction();
-        setPendingAction(null);
+        setTimeout(() => {
+          pendingAction();
+          setPendingAction(null);
+        }, 50);
       }
     }
   };
@@ -226,24 +229,66 @@ const App = () => {
   };
 
   /**
-   * Añadir una nueva película
+   * Añadir una nueva película (optimistic update)
+   * Muestra la película al instante y busca poster/año en background
    */
   const handleAddMovie = async (title) => {
     if (!requireAuth(() => handleAddMovie(title))) return;
     
     try {
+      const pendingStatus = statuses.find((s) => s.description === 'Pendiente');
+      
+      // Crear película temporal con ID negativo (para diferenciarla)
+      const tempId = -Date.now();
+      const tempMovie = {
+        id: tempId,
+        title: title,
+        year: null,
+        poster_path: null,
+        status_id: pendingStatus?.id || 1,
+        created_at: new Date().toISOString(),
+      };
+      
+      // Añadir al instante a la UI
+      setAllMovies((prev) => [tempMovie, ...prev]);
+      
+      // Buscar en TMDB en background
       const tmdbData = await tmdbApi.searchMovie(title);
       
-      const pendingStatus = statuses.find((s) => s.description === 'Pendiente');
-
-      await moviesApi.create({
+      // Actualizar la película temporal con datos de TMDB
+      setAllMovies((prev) =>
+        prev.map((m) =>
+          m.id === tempId
+            ? {
+                ...m,
+                year: tmdbData?.year || null,
+                poster_path: tmdbData?.poster_path || null,
+              }
+            : m
+        )
+      );
+      
+      // Crear en la BD
+      const createdMovie = await moviesApi.create({
         title: title,
         year: tmdbData?.year || null,
         poster_path: tmdbData?.poster_path || null,
         status_id: pendingStatus?.id || 1,
       });
-
-      await loadMovies();
+      
+      // Reemplazar película temporal con la real (con ID real)
+      setAllMovies((prev) =>
+        prev.map((m) => (m.id === tempId ? createdMovie : m))
+      );
+      
+      // Resetear página y búsqueda DESPUÉS de crear
+      setCurrentPage(0);
+      setSearchTerm('');
+      
+      // Refresco de sincronización después de 500ms
+      setTimeout(() => {
+        loadAllMovies();
+      }, 500);
     } catch (error) {
       console.error('Error adding movie:', error);
       alert('Error al añadir película');
@@ -251,14 +296,40 @@ const App = () => {
   };
 
   /**
-   * Actualizar el estado de una película
+   * Actualizar el estado de una película (optimistic update)
+   * Actualiza la UI inmediatamente y hace la petición en background
    */
   const handleStatusChange = async (movieId, newStatusId) => {
     if (!requireAuth(() => handleStatusChange(movieId, newStatusId))) return;
     
+    // Guardar estados anteriores por si acaso falla
+    const oldAllMovies = allMovies;
+    const oldMovies = movies;
+    
     try {
-      await moviesApi.update(movieId, { status_id: newStatusId });
-      await loadMovies();
+      // Actualizar inmediatamente en allMovies (para stats)
+      setAllMovies((prev) =>
+        prev.map((m) =>
+          m.id === movieId ? { ...m, status_id: newStatusId } : m
+        )
+      );
+      
+      // Actualizar inmediatamente en movies (para la página actual)
+      setMovies((prev) =>
+        prev.map((m) =>
+          m.id === movieId ? { ...m, status_id: newStatusId } : m
+        )
+      );
+      
+      // Hacer la petición en background (sin await)
+      moviesApi.update(movieId, { status_id: newStatusId })
+        .catch((error) => {
+          console.error('Error updating movie:', error);
+          // Revertir cambios si falla
+          setAllMovies(oldAllMovies);
+          setMovies(oldMovies);
+          alert('Error al actualizar película. Cambio revertido.');
+        });
     } catch (error) {
       console.error('Error updating movie:', error);
       alert('Error al actualizar película');
@@ -266,16 +337,34 @@ const App = () => {
   };
 
   /**
-   * Eliminar una película
+   * Eliminar una película (optimistic update)
+   * Elimina inmediatamente de la UI y hace la petición en background
    */
   const handleDelete = async (movieId) => {
     if (!requireAuth(() => handleDelete(movieId))) return;
     
     if (!confirm('¿Eliminar esta película?')) return;
 
+    // Guardar estados anteriores por si acaso falla
+    const oldAllMovies = allMovies;
+    const oldMovies = movies;
+
     try {
-      await moviesApi.delete(movieId);
-      await loadMovies();
+      // Eliminar inmediatamente de allMovies
+      setAllMovies((prev) => prev.filter((m) => m.id !== movieId));
+      
+      // Eliminar inmediatamente de movies
+      setMovies((prev) => prev.filter((m) => m.id !== movieId));
+      
+      // Hacer la petición en background (sin await)
+      moviesApi.delete(movieId)
+        .catch((error) => {
+          console.error('Error deleting movie:', error);
+          // Revertir cambios si falla
+          setAllMovies(oldAllMovies);
+          setMovies(oldMovies);
+          alert('Error al eliminar película. Cambio revertido.');
+        });
     } catch (error) {
       console.error('Error deleting movie:', error);
       alert('Error al eliminar película');
@@ -329,17 +418,19 @@ const App = () => {
    * Aplica paginación después de filtrar
    */
   const searchedMovies = allMovies.filter((movie) => {
+    const title = movie.title || '';
+    const year = movie.year;
     const searchLower = searchTerm.toLowerCase().trim();
     
     // Buscar por título
-    const matchesTitle = movie.title
+    const matchesTitle = title
       .toLowerCase()
       .includes(searchLower);
     
     // Buscar por año (si el término de búsqueda es un número)
     const matchesYear = searchLower && /^\d+$/.test(searchLower) && 
-      movie.year && 
-      movie.year.toString() === searchLower;
+      year && 
+      year.toString() === searchLower;
     
     return matchesTitle || matchesYear;
   });
@@ -387,7 +478,7 @@ const App = () => {
                   fillMissingPosters(allMovies);
                 }
               }}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-sm"
+              className={BUTTON_STYLES.primary_sm}
               title="Busca posters faltantes en background"
             >
               🎬 Rellenar Posters
@@ -401,14 +492,14 @@ const App = () => {
                   setShowImport(!showImport);
                 }
               }}
-              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition"
+              className={BUTTON_STYLES.primary}
             >
               Importar CSV
             </button>
             {user && (
               <button
                 onClick={logout}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition text-sm"
+                className={BUTTON_STYLES.danger}
               >
                 Logout
               </button>
@@ -431,13 +522,13 @@ const App = () => {
             <div className="flex gap-2">
               <button
                 onClick={handleImportCSV}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition"
+                className={BUTTON_STYLES.primary}
               >
                 Importar
               </button>
               <button
                 onClick={() => setShowImport(false)}
-                className="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition"
+                className={BUTTON_STYLES.secondary}
               >
                 Cancelar
               </button>
@@ -501,7 +592,7 @@ const App = () => {
               <button
                 onClick={handlePrevPage}
                 disabled={currentPage === 0}
-                className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
+                className={BUTTON_STYLES.secondary_lg}
               >
                 ← Anterior
               </button>
@@ -513,7 +604,7 @@ const App = () => {
               <button
                 onClick={handleNextPage}
                 disabled={currentPage >= searchTotalPages - 1}
-                className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
+                className={BUTTON_STYLES.secondary_lg}
               >
                 Siguiente →
               </button>
@@ -534,13 +625,13 @@ const App = () => {
                 placeholder="Pega tu Access Token"
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
-                className="w-full bg-slate-700 text-white p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono text-sm"
+                className="w-full bg-slate-700 text-white p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
               />
               
               <div className="flex gap-2">
                 <button
                   onClick={handleLoginModal}
-                  className="flex-1 px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition font-semibold"
+                  className={BUTTON_STYLES.primary_lg}
                 >
                   Entrar
                 </button>
@@ -550,7 +641,7 @@ const App = () => {
                     setToken('');
                     setPendingAction(null);
                   }}
-                  className="flex-1 px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition"
+                  className={BUTTON_STYLES.secondary}
                 >
                   Cancelar
                 </button>

@@ -10,6 +10,7 @@
  */
 
 import React from 'react';
+import { ELEMENT_STYLES } from '../styles/buttonStyles.js';
 
 const Stats = ({ movies, statuses, filterStatus = 'all', onFilterChange }) => {
   const handleClick = (statusId) => {
@@ -31,14 +32,14 @@ const Stats = ({ movies, statuses, filterStatus = 'all', onFilterChange }) => {
           <button
             key={status.id}
             onClick={() => handleClick(status.id)}
-            className={`rounded-lg p-4 transition cursor-pointer transform hover:scale-105 ${
+            className={`${ELEMENT_STYLES.cardBase} ${
               isSelected
-                ? 'bg-purple-600 border-2 border-purple-400'
-                : 'bg-slate-800 hover:bg-slate-700 border-2 border-transparent'
+                ? ELEMENT_STYLES.selected
+                : ELEMENT_STYLES.unselected
             }`}
           >
             <div className={`text-sm ${
-              isSelected ? 'text-purple-100 font-semibold' : 'text-slate-400'
+              isSelected ? ELEMENT_STYLES.textSelected : ELEMENT_STYLES.textUnselected
             }`}>
               {status.description}
             </div>
