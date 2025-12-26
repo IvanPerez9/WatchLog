@@ -21,7 +21,6 @@ Aplicación web para gestionar tu biblioteca de películas. Trackea películas v
 - [Requisitos](#requisitos)
 - [Instalación](#instalación)
 - [Uso](#uso)
-- [Sistema de autenticación](#sistema-de-autenticación)
 - [Deploy](#deploy)
 - [Tecnologías](#tecnologías)
 - [Estructura](#estructura)
@@ -61,8 +60,7 @@ Aplicación web para gestionar tu biblioteca de películas. Trackea películas v
 
 ### Datos y Sincronización
 - 🖼️ **Pósters automáticos** - Sincronización con TMDB
-- 📥 **Importación CSV** - Carga múltiples películas a la vez
-- 🔄 **Sincronización en background** - Sin bloquear la interfaz
+-  **Sincronización en background** - Sin bloquear la interfaz
 
 ### Interfaz
 - 📱 **Responsive design** - Funciona en móvil, tablet y desktop
@@ -72,15 +70,19 @@ Aplicación web para gestionar tu biblioteca de películas. Trackea películas v
 
 - **Node.js** 16 o superior
 - **npm** o **yarn**
-- Cuenta en [Supabase](https://supabase.com) (gratuito)
-- API key en [TMDB](https://www.themoviedb.org/settings/api) (gratuito)
+- Cuenta en [Supabase](https://supabase.com) (gratuito) - Para la base de datos
+- API key en [TMDB](https://www.themoviedb.org/settings/api) (gratuito, opcional) - Para sincronizar pósters
 
 ## 🚀 Instalación
 
-### 1. Clonar el repositorio
+### 1. Fork del repositorio
+
+👉 **Haz click en el botón "Fork"** en [GitHub](https://github.com/IvanPerez9/WatchLog) para crear tu propia copia.
+
+Luego clona tu fork:
 
 ```bash
-git clone https://github.com/tu-usuario/WatchLog.git
+git clone https://github.com/TU-USUARIO/WatchLog.git
 cd WatchLog
 ```
 
@@ -90,7 +92,16 @@ cd WatchLog
 npm install
 ```
 
-### 3. Configurar variables de entorno
+### 3. Configurar Supabase
+
+1. Crear cuenta gratuita en [Supabase](https://supabase.com)
+2. Crear un nuevo proyecto
+3. Ir a **SQL Editor** y ejecutar `SUPABASE_SETUP.sql` de este repositorio
+4. Copiar tus credenciales:
+   - `VITE_SUPABASE_URL`: Settings → API → Project URL
+   - `VITE_SUPABASE_ANON_KEY`: Settings → API → anon key
+
+### 4. Configurar variables de entorno
 
 Crear archivo `.env` en la raíz:
 
@@ -98,18 +109,35 @@ Crear archivo `.env` en la raíz:
 VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
 VITE_SUPABASE_ANON_KEY=tu_anon_key
 VITE_TMDB_API_KEY=tu_tmdb_api_key
-VITE_AUTH_TOKEN=tu_token_secreto
+VITE_AUTH_TOKEN=tu_token_secreto_aqui
 ```
 
-Referencia: Ver `.env.example`
+⚠️ **Seguridad**: Agregar `.env` a `.gitignore` - ya está aquí, ¡nunca hagas push de este archivo!
 
-### 4. Configurar base de datos
+Referencia: Ver `.env.example` para la estructura
 
-1. Crear proyecto en [Supabase](https://supabase.com)
-2. Ejecutar SQL de `SUPABASE_SETUP.sql` en el SQL Editor
-3. Copiar credenciales a `.env`
+### 5. Obtener API Key de TMDB (Opcional pero Recomendado)
 
-### 5. Iniciar desarrollo
+1. Registrarse en [TMDB](https://www.themoviedb.org/settings/api)
+2. Crear una API key (hay tier gratuito)
+3. Agregar a `.env` como `VITE_TMDB_API_KEY`
+
+### 6. Crear tu token de autenticación
+
+Generar un token fuerte y aleatorio (sin espacios):
+
+```bash
+# Linux/Mac
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# O usa un generador online: https://random.org/strings/
+```
+
+Luego:
+1. Agregarlo a `.env` como `VITE_AUTH_TOKEN`
+2. Agregarlo a Supabase: SQL Editor → Insert en tabla `valid_tokens`
+
+### 7. Iniciar desarrollo
 
 ```bash
 npm run dev
@@ -125,23 +153,12 @@ Abre http://localhost:3000
 - Filtrar por estado
 - Ver estadísticas
 
-### Con autenticación (Escritura)
+### Acceso Autenticado (Escritura)
 Ingresa tu token para:
 - ➕ Agregar películas nuevas
 - ✏️ Cambiar estado de películas
 - 🗑️ Eliminar películas
-- 📤 Importar CSV
 - 🔄 Sincronizar pósters con TMDB
-
-## 🔐 Sistema de autenticación
-
-**Token-based authentication** con validación en 3 capas:
-
-1. **Cliente** - Token validado contra `VITE_AUTH_TOKEN`
-2. **API** - Token enviado en header `x-auth-token`
-3. **Base de datos** - Supabase RLS valida contra tabla `valid_tokens`
-
-El token se almacena en localStorage y persiste entre sesiones.
 
 ## 🚀 Deploy
 

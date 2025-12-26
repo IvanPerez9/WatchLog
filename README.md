@@ -21,7 +21,6 @@ Web application to manage your movie library. Track watched, pending, and in-pro
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Usage](#usage)
-- [Authentication System](#authentication-system)
 - [Deploy](#deploy)
 - [Technologies](#technologies)
 - [Project Structure](#project-structure)
@@ -61,8 +60,7 @@ Web application to manage your movie library. Track watched, pending, and in-pro
 
 ### Data and Synchronization
 - 🖼️ **Automatic Posters** - TMDB synchronization
-- 📥 **CSV Import** - Bulk load multiple movies at once
-- 🔄 **Background Sync** - Non-blocking interface
+- � **Background Sync** - Non-blocking interface for poster sync
 
 ### Interface
 - 📱 **Responsive Design** - Works on mobile, tablet and desktop
@@ -77,10 +75,14 @@ Web application to manage your movie library. Track watched, pending, and in-pro
 
 ## 🚀 Installation
 
-### 1. Clone the repository
+### 1. Fork the repository
+
+👉 **Click "Fork" button** on [GitHub](https://github.com/IvanPerez9/WatchLog) to create your own copy.
+
+Then clone your fork:
 
 ```bash
-git clone https://github.com/your-username/WatchLog.git
+git clone https://github.com/YOUR-USERNAME/WatchLog.git
 cd WatchLog
 ```
 
@@ -90,26 +92,52 @@ cd WatchLog
 npm install
 ```
 
-### 3. Configure environment variables
+### 3. Configure Supabase
 
-Create a `.env` file in the root:
+1. Create a free account on [Supabase](https://supabase.com)
+2. Create a new project
+3. Go to **SQL Editor** and execute `SUPABASE_SETUP.sql` from this repo
+4. Copy your credentials:
+   - `VITE_SUPABASE_URL`: Settings → API → Project URL
+   - `VITE_SUPABASE_ANON_KEY`: Settings → API → anon key
+
+### 4. Configure environment variables
+
+Create a `.env` file in the root (never commit this!):
 
 ```env
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your_anon_key
 VITE_TMDB_API_KEY=your_tmdb_api_key
-VITE_AUTH_TOKEN=your_secret_token
+VITE_AUTH_TOKEN=your_secret_token_here
 ```
 
-Reference: See `.env.example`
+⚠️ **Security**: Add `.env` to `.gitignore` - it's already there, never push this file!
 
-### 4. Configure database
+Reference: See `.env.example` for the structure
 
-1. Create a project on [Supabase](https://supabase.com)
-2. Execute SQL from `SUPABASE_SETUP.sql` in the SQL Editor
-3. Copy credentials to `.env`
+### 5. Get TMDB API Key (Optional but Recommended)
 
-### 5. Start development
+1. Register on [TMDB](https://www.themoviedb.org/settings/api)
+2. Create an API key (free tier available)
+3. Add it to `.env` as `VITE_TMDB_API_KEY`
+
+### 6. Create your auth token
+
+Generate a strong random token (no spaces):
+
+```bash
+# Linux/Mac
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# Or use any online generator: https://random.org/strings/
+```
+
+Then:
+1. Add it to `.env` as `VITE_AUTH_TOKEN`
+2. Add it to Supabase: SQL Editor → Insert into `valid_tokens` table
+
+### 7. Start development
 
 ```bash
 npm run dev
@@ -119,29 +147,19 @@ Open http://localhost:3000
 
 ## 💻 Usage
 
-### Without authentication (Read)
-- View movies
-- Search by title or year
-- Filter by status
-- View statistics
+### Public Access (Read-Only)
+- 👁️ View your movies
+- 🔍 Search by title or year  
+- 🎭 Filter by status
+- 📊 View statistics
 
-### With authentication (Write)
-Enter your token to:
+### Authenticated Access (Write)
+Enter your token in the app to:
 - ➕ Add new movies
 - ✏️ Change movie status
 - 🗑️ Delete movies
-- 📤 Import CSV
-- 🔄 Sync posters with TMDB
+- 🔄 Auto-sync posters with TMDB
 
-## 🔐 Authentication System
-
-**Token-based authentication** with validation in 3 layers:
-
-1. **Client** - Token validated against `VITE_AUTH_TOKEN`
-2. **API** - Token sent in `x-auth-token` header
-3. **Database** - Supabase RLS validates against `valid_tokens` table
-
-Token is stored in localStorage and persists between sessions.
 
 ## 🚀 Deploy
 
@@ -202,8 +220,6 @@ npm run preview  # Build preview
 ```
 
 ### Environment variables in development
-
-The `.env` file must be in `.gitignore` (never commit).
 
 Use `.env.example` as reference for new contributors.
 
