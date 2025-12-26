@@ -214,7 +214,7 @@ You are free to:
 Conditions:
 - 📝 Include copy of the license
 
-See [LICENSE](LICENSE) for more details.
+See [LICENSE](LICENSE.md) for more details.
 
 ## 🚀 Future Improvements
 
