@@ -25,20 +25,20 @@ const AddMovie = ({ onAdd }) => {
   };
 
   return (
-    <div className="bg-slate-800 rounded-lg p-6">
-      <form onSubmit={handleSubmit} className="flex gap-2">
+    <div className="bg-slate-800 rounded-lg p-4 sm:p-6 w-full">
+      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Título de la película..."
           disabled={loading}
-          className="flex-1 bg-slate-700 text-white px-4 py-3 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none disabled:opacity-50"
+          className="flex-1 bg-slate-700 text-white px-4 py-3 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none disabled:opacity-50 text-sm sm:text-base"
         />
         <button
           type="submit"
           disabled={loading || !title.trim()}
-          className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg flex items-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full sm:w-auto px-4 sm:px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg flex items-center justify-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base whitespace-nowrap"
         >
           <Plus className="w-5 h-5" />
           {loading ? 'Añadiendo...' : 'Añadir'}
