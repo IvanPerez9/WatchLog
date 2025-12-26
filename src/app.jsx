@@ -1,7 +1,6 @@
 /**
  * Componente principal App
- * Orquesta toda la aplicación
- * Similar a un @Controller o clase Main en Spring
+ * Orquesta toda la aplicación: gestión de películas, autenticación y UI
  */
 
 import React, { useState, useEffect } from 'react';
@@ -117,17 +116,12 @@ const App = () => {
   const loadMovies = async () => {
     try {
       setLoading(true);
-      console.log('🔍 Cargando películas - Página:', currentPage, 'Filtro:', filterStatus);
       
       const statusId = filterStatus === 'all' ? null : parseInt(filterStatus);
       const data = await moviesApi.getAll(currentPage, pageSize, statusId);
       
-      console.log('📦 Datos recibidos:', data);
-      console.log('📊 Total películas en página:', data?.length || 0);
-      
       setMovies(data || []);
       
-      // Obtener el total real de películas
       await loadTotalCount(statusId);
     } catch (error) {
       console.error('Error loading movies:', error);
@@ -182,13 +176,11 @@ const App = () => {
     }
 
     setPosterStatus(`🎬 Encontradas ${moviesWithoutPoster.length} películas sin poster. Iniciando búsqueda...`);
-    console.log(`🎬 Encontradas ${moviesWithoutPoster.length} películas sin poster`);
 
     let updated = 0;
     for (const movie of moviesWithoutPoster) {
       try {
         setPosterStatus(`⏳ Buscando: ${movie.title}...`);
-        console.log(`📽️ Buscando poster para: ${movie.title}`);
         
         const tmdbData = await tmdbApi.searchMovie(movie.title);
 
@@ -197,12 +189,10 @@ const App = () => {
           
           if (tmdbData.poster_path) {
             updates.poster_path = tmdbData.poster_path;
-            console.log(`✅ Encontrado poster para: ${movie.title}`);
           }
           
           if (tmdbData.year && !movie.year) {
             updates.year = tmdbData.year;
-            console.log(`✅ Encontrado año para: ${movie.title} (${tmdbData.year})`);
           }
           
           if (Object.keys(updates).length > 0) {
@@ -211,19 +201,17 @@ const App = () => {
             setPosterStatus(`✅ ${updated}/${moviesWithoutPoster.length} películas actualizadas`);
           }
         } else {
-          console.log(`⚠️ No se encontró información para: ${movie.title}`);
           setPosterStatus(`⚠️ Sin información: ${movie.title}`);
         }
 
         await new Promise((resolve) => setTimeout(resolve, 500));
       } catch (error) {
-        console.error(`❌ Error procesando ${movie.title}:`, error);
+        console.error(`Error procesando ${movie.title}:`, error);
         setPosterStatus(`❌ Error en: ${movie.title}`);
       }
     }
 
-    setPosterStatus(`🎉 Completado! ${updated} películas actualizadas`);
-    console.log('🎉 Proceso completado');
+    setPosterStatus(`🎉 ¡Completado! ${updated} películas actualizadas`);
     await loadAllMovies();
     setFillingPosters(false);
   };

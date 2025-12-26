@@ -10,7 +10,6 @@ import config from '../config.js';
 
 /**
  * Función auxiliar para hacer fetch a Supabase
- * Similar a RestTemplate.exchange() en Spring
  * Para GET: usa anonKey (público)
  * Para POST/PATCH/DELETE: usa anonKey (ya que las RLS están permitidas públicamente)
  */
