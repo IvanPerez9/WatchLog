@@ -1,0 +1,237 @@
+# WatchLog - Movie Tracker
+
+Aplicación web para gestionar tu biblioteca de películas. Trackea películas vistas, pendientes y en proceso con sincronización automática con TMDB.
+
+## 📋 Tabla de contenidos
+
+- [Descripción](#descripción)
+  - [¿Por qué existe?](#por-qué-existe)
+  - [Principios](#principios)
+- [Características](#características)
+  - [Core](#core)
+  - [Búsqueda y Filtrado](#búsqueda-y-filtrado)
+  - [Datos y Sincronización](#datos-y-sincronización)
+  - [Interfaz](#interfaz)
+- [Requisitos](#requisitos)
+- [Instalación](#instalación)
+- [Uso](#uso)
+- [Sistema de autenticación](#sistema-de-autenticación)
+- [Deploy](#deploy)
+- [Tecnologías](#tecnologías)
+- [Estructura](#estructura)
+- [Desarrollo](#desarrollo)
+- [Licencia](#licencia)
+- [Recursos](#recursos)
+- [Próximas mejoras](#próximas-mejoras)
+
+## 📖 Descripción
+
+Aplicación web para gestionar tu biblioteca de películas. Trackea películas vistas, pendientes y en proceso con sincronización automática con TMDB.
+
+### ¿Por qué existe?
+
+**WatchLog** nace de la necesidad de tener un único lugar centralizado para gestionar todo tu contenido de entretenimiento. Cansado de usar una aplicación de terceros o un CSV para registrar qué películas viste.
+
+**Visión futura:** Expandir más allá de películas para incluir series y libros. Un espacio unificado donde eres **dueño de tus datos** y puedes acceder desde cualquier dispositivo, en cualquier momento.
+
+### Principios
+
+- 🎯 **Centralizado** - Todo tu contenido en un solo lugar
+- 🔒 **Privado** - Tus datos, tu servidor, sin algoritmos que te espíen
+- 📱 **Accesible** - Desde móvil, tablet o desktop
+- 🚀 **Abierto** - Código abierto, puedes fork y personalizar
+
+## ✨ Características
+
+### Core
+- 🎬 **CRUD completo** - Crear, leer, actualizar y eliminar películas
+- 🔐 **Autenticación segura** - Token-based con validación en base de datos
+- 💾 **Persistencia** - Todos los datos guardados en PostgreSQL (Supabase)
+
+### Búsqueda y Filtrado
+- 🔍 **Búsqueda global** - Por título o año en toda tu biblioteca
+- 🎭 **Filtrado por estado** - Pendiente, Vista, Viendo, Favorita
+- 📊 **Estadísticas** - Visualiza conteo de películas por estado
+
+### Datos y Sincronización
+- 🖼️ **Pósters automáticos** - Sincronización con TMDB
+- 📥 **Importación CSV** - Carga múltiples películas a la vez
+- 🔄 **Sincronización en background** - Sin bloquear la interfaz
+
+### Interfaz
+- 📱 **Responsive design** - Funciona en móvil, tablet y desktop
+- ⚡ **Ultra rápido** - Carga instantánea, construcción con Vite
+
+## 📋 Requisitos
+
+- **Node.js** 16 o superior
+- **npm** o **yarn**
+- Cuenta en [Supabase](https://supabase.com) (gratuito)
+- API key en [TMDB](https://www.themoviedb.org/settings/api) (gratuito)
+
+## 🚀 Instalación
+
+### 1. Clonar el repositorio
+
+```bash
+git clone https://github.com/tu-usuario/WatchLog.git
+cd WatchLog
+```
+
+### 2. Instalar dependencias
+
+```bash
+npm install
+```
+
+### 3. Configurar variables de entorno
+
+Crear archivo `.env` en la raíz:
+
+```env
+VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
+VITE_SUPABASE_ANON_KEY=tu_anon_key
+VITE_TMDB_API_KEY=tu_tmdb_api_key
+VITE_AUTH_TOKEN=tu_token_secreto
+```
+
+Referencia: Ver `.env.example`
+
+### 4. Configurar base de datos
+
+1. Crear proyecto en [Supabase](https://supabase.com)
+2. Ejecutar SQL de `SUPABASE_SETUP.sql` en el SQL Editor
+3. Copiar credenciales a `.env`
+
+### 5. Iniciar desarrollo
+
+```bash
+npm run dev
+```
+
+Abre http://localhost:3000
+
+## 💻 Uso
+
+### Sin autenticación (Lectura)
+- Ver películas
+- Buscar por título o año
+- Filtrar por estado
+- Ver estadísticas
+
+### Con autenticación (Escritura)
+Ingresa tu token para:
+- ➕ Agregar películas nuevas
+- ✏️ Cambiar estado de películas
+- 🗑️ Eliminar películas
+- 📤 Importar CSV
+- 🔄 Sincronizar pósters con TMDB
+
+## 🔐 Sistema de autenticación
+
+**Token-based authentication** con validación en 3 capas:
+
+1. **Cliente** - Token validado contra `VITE_AUTH_TOKEN`
+2. **API** - Token enviado en header `x-auth-token`
+3. **Base de datos** - Supabase RLS valida contra tabla `valid_tokens`
+
+El token se almacena en localStorage y persiste entre sesiones.
+
+## 🚀 Deploy
+
+### Netlify (Recomendado)
+
+1. Push a GitHub
+2. Conectar a [Netlify](https://app.netlify.com)
+3. Configuración automática:
+   - Build: `npm run build`
+   - Publish: `dist`
+4. Agregar variables de entorno en dashboard
+5. ✨ Deploy automático en cada push
+
+
+## 🛠️ Tecnologías
+
+| Capa | Tecnología | Propósito |
+|------|-----------|----------|
+| Frontend | React + Vite | UI interactiva |
+| Estilos | Tailwind CSS | Styling responsivo |
+| Iconos | Lucide React | Icons modernos |
+| Backend | Supabase | PostgreSQL + API REST |
+| Datos externos | TMDB API | Info películas |
+| Auth | Token-based | Seguridad |
+
+## 📁 Estructura
+
+```
+watchlog/
+├── src/
+│   ├── app.jsx              # Componente principal
+│   ├── config.js            # Configuración
+│   ├── api/
+│   │   ├── supabase.js      # Cliente REST
+│   │   └── tmdb.js          # Cliente TMDB
+│   ├── auth/
+│   │   └── useAuth.js       # Hook auth
+│   └── components/
+│       ├── MovieCard.jsx    
+│       ├── AddMovie.jsx     
+│       ├── Filters.jsx      
+│       └── Stats.jsx        
+├── index.html
+├── package.json
+├── vite.config.js
+├── .env.example
+└── README.md
+```
+
+## 💻 Desarrollo
+
+### Scripts disponibles
+
+```bash
+npm run dev      # Desarrollo con HMR
+npm run build    # Build optimizado
+npm run preview  # Vista previa del build
+```
+
+### Variables de entorno en desarrollo
+
+El archivo `.env` debe estar en `.gitignore` (no commitear nunca).
+
+Usar `.env.example` como referencia para nuevos contribuidores.
+
+## 📄 Licencia
+
+Este proyecto está bajo licencia **MIT**.
+
+Eres libre de:
+- ✅ Usar en proyectos personales
+- ✅ Usar en proyectos comerciales
+- ✅ Modificar el código
+- ✅ Distribuir
+
+Condiciones:
+- 📝 Incluir copia de la licencia
+
+Ver [LICENSE](LICENSE) para más detalles.
+
+## 🤝 Contribuciones
+
+¿Quieres contribuir? Lee [CONTRIBUTING.md](CONTRIBUTING.md)
+
+## 📚 Recursos
+
+- [Supabase Docs](https://supabase.io/docs)
+- [TMDB API](https://developer.themoviedb.org/3)
+- [React](https://react.dev)
+- [Vite](https://vitejs.dev)
+- [Tailwind CSS](https://tailwindcss.com)
+
+## 🚀 Próximas mejoras
+
+**Fase 2 - Expansión de contenido:**
+- [ ] Soporte para **series de TV** - Mismo sistema que películas
+- [ ] Soporte para **libros** - Gestiona tu biblioteca de lectura
+- [ ] API integrada para Google Books y TheTVDB
+
