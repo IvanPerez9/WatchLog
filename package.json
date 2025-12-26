@@ -1,0 +1,32 @@
+{
+  "name": "watchlog",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Movie tracking application",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IvanPerez9/WatchLog.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/IvanPerez9/WatchLog/issues"
+  },
+  "homepage": "https://github.com/IvanPerez9/WatchLog#readme",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.89.0",
+    "lucide-react": "^0.562.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.1.2",
+    "vite": "^7.3.0"
+  }
+}

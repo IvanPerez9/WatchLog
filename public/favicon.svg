@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Fondo gradiente morado -->
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#a855f7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Círculo de fondo -->
+  <circle cx="50" cy="50" r="50" fill="url(#grad)"/>
+  
+  <!-- Rollo de película (cinta de cine) -->
+  <g transform="translate(50, 50)">
+    <!-- Círculos del rollo -->
+    <circle cx="0" cy="0" r="28" fill="none" stroke="white" stroke-width="3"/>
+    <circle cx="0" cy="0" r="20" fill="none" stroke="white" stroke-width="2"/>
+    <circle cx="0" cy="0" r="12" fill="white"/>
+    
+    <!-- Perforaciones de la película -->
+    <rect x="-24" y="-4" width="3" height="8" fill="white"/>
+    <rect x="-16" y="-4" width="3" height="8" fill="white"/>
+    <rect x="-8" y="-4" width="3" height="8" fill="white"/>
+    <rect x="0" y="-4" width="3" height="8" fill="white"/>
+    <rect x="8" y="-4" width="3" height="8" fill="white"/>
+    <rect x="16" y="-4" width="3" height="8" fill="white"/>
+    <rect x="24" y="-4" width="3" height="8" fill="white"/>
+    
+    <rect x="-24" y="-4" width="3" height="8" fill="white" transform="rotate(90 0 0)"/>
+    <rect x="-16" y="-4" width="3" height="8" fill="white" transform="rotate(90 0 0)"/>
+    <rect x="-8" y="-4" width="3" height="8" fill="white" transform="rotate(90 0 0)"/>
+    <rect x="8" y="-4" width="3" height="8" fill="white" transform="rotate(90 0 0)"/>
+    <rect x="16" y="-4" width="3" height="8" fill="white" transform="rotate(90 0 0)"/>
+    <rect x="24" y="-4" width="3" height="8" fill="white" transform="rotate(90 0 0)"/>
+  </g>
+</svg>
