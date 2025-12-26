@@ -13,6 +13,9 @@ const config = {
     baseUrl: 'https://api.themoviedb.org/3',
     imageBaseUrl: 'https://image.tmdb.org/t/p/w500',
   },
+  auth: {
+    validToken: import.meta.env.VITE_AUTH_TOKEN,
+  },
 };
 
 // Validación: lanzar error si faltan configuraciones críticas

@@ -10,28 +10,30 @@ import config from '../config.js';
 
 /**
  * Función auxiliar para hacer fetch a Supabase
- * Para GET: usa anonKey (público)
- * Para POST/PATCH/DELETE: usa anonKey (ya que las RLS están permitidas públicamente)
+ * Maneja headers, autenticación y errores
  */
-const supabaseFetch = async (endpoint, options = {}) => {
+const supabaseFetch = async (endpoint, options = {}, token = null) => {
   const url = `${config.supabase.url}/rest/v1/${endpoint}`;
-  console.log('🔗 Supabase URL:', url);
   
-  // Siempre usar anonKey (las RLS están configuradas para permitir todo públicamente)
   const apiKey = config.supabase.anonKey;
+  
+  const headers = {
+    'apikey': apiKey,
+    'Authorization': `Bearer ${apiKey}`,
+    'Content-Type': 'application/json',
+    'Prefer': 'return=representation',
+    ...options.headers,
+  };
+
+  // Si hay token, añadirlo al header para validación en RLS
+  if (token) {
+    headers['x-auth-token'] = token;
+  }
   
   const response = await fetch(url, {
     ...options,
-    headers: {
-      'apikey': apiKey,
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=representation',
-      ...options.headers,
-    },
+    headers,
   });
-
-  console.log('📡 Response status:', response.status);
 
   if (!response.ok) {
     const errorText = await response.text();
@@ -40,23 +42,17 @@ const supabaseFetch = async (endpoint, options = {}) => {
   }
 
   const data = await response.json();
-  console.log('✅ Data received:', data);
   return data;
 };
 
 /**
  * API de Movies - CRUD completo
- * Como un MovieRepository o MovieService
- * 
- * IMPORTANTE: Las tablas en MAYÚSCULAS necesitan comillas dobles en Supabase
  */
 export const moviesApi = {
   /**
-   * GET /movies - Listar películas con paginación
+   * GET /movies - Listar películas con paginación (sin token requerido)
    */
   getAll: async (page = 0, pageSize = 20, statusId = null) => {
-    console.log('📞 Llamando a getAll con:', { page, pageSize, statusId });
-    
     const from = page * pageSize;
     const to = from + pageSize - 1;
     
@@ -111,34 +107,37 @@ export const moviesApi = {
   /**
    * POST /movies - Crear una película
    * @param {Object} movie - {title, year, status_id, poster_path}
+   * @param {string} token - Token de autenticación
    */
-  create: async (movie) => {
+  create: async (movie, token) => {
     return supabaseFetch('movies', {
       method: 'POST',
       body: JSON.stringify(movie),
-    });
+    }, token);
   },
 
   /**
    * PATCH /movies?id=eq.{id} - Actualizar una película
    * @param {number} id - ID de la película
    * @param {Object} updates - Campos a actualizar
+   * @param {string} token - Token de autenticación
    */
-  update: async (id, updates) => {
+  update: async (id, updates, token) => {
     return supabaseFetch(`movies?id=eq.${id}`, {
       method: 'PATCH',
       body: JSON.stringify(updates),
-    });
+    }, token);
   },
 
   /**
    * DELETE /movies?id=eq.{id} - Eliminar una película
    * @param {number} id - ID de la película
+   * @param {string} token - Token de autenticación
    */
-  delete: async (id) => {
+  delete: async (id, token) => {
     return supabaseFetch(`movies?id=eq.${id}`, {
       method: 'DELETE',
-    });
+    }, token);
   },
 };
 

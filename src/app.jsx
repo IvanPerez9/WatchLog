@@ -1,12 +1,14 @@
 /**
  * Componente principal App
- * Orquesta toda la aplicación: gestión de películas, autenticación y UI
+ * Orquesta toda la aplicación
+ * Similar a un @Controller o clase Main en Spring
  */
 
 import React, { useState, useEffect } from 'react';
 import { Film } from 'lucide-react';
 import { moviesApi, statusesApi } from './api/supabase.js';
 import { tmdbApi } from './api/tmdb.js';
+import config from './config.js';
 import MovieCard from './components/MovieCard.jsx';
 import AddMovie from './components/AddMovie.jsx';
 import Filters from './components/Filters.jsx';
@@ -76,10 +78,11 @@ const App = () => {
    * Manejar login con Access Token desde el modal
    */
   const handleLoginModal = async () => {
-    const error = await login(token);
-    if (!error) {
+    // Validar que el token coincida con el token válido
+    if (token === config.auth.validToken) {
       setShowLoginModal(false);
       setToken('');
+      login(token);
       // Ejecutar la acción pendiente si existe
       if (pendingAction) {
         setTimeout(() => {
@@ -87,6 +90,8 @@ const App = () => {
           setPendingAction(null);
         }, 50);
       }
+    } else {
+      alert('❌ Token inválido');
     }
   };
 
@@ -122,6 +127,7 @@ const App = () => {
       
       setMovies(data || []);
       
+      // Obtener el total real de películas
       await loadTotalCount(statusId);
     } catch (error) {
       console.error('Error loading movies:', error);
@@ -196,7 +202,7 @@ const App = () => {
           }
           
           if (Object.keys(updates).length > 0) {
-            await moviesApi.update(movie.id, updates);
+            await moviesApi.update(movie.id, updates, user.token);
             updated++;
             setPosterStatus(`✅ ${updated}/${moviesWithoutPoster.length} películas actualizadas`);
           }
@@ -262,7 +268,7 @@ const App = () => {
         year: tmdbData?.year || null,
         poster_path: tmdbData?.poster_path || null,
         status_id: pendingStatus?.id || 1,
-      });
+      }, user.token);
       
       // Reemplazar película temporal con la real (con ID real)
       setAllMovies((prev) =>
@@ -310,7 +316,7 @@ const App = () => {
       );
       
       // Hacer la petición en background (sin await)
-      moviesApi.update(movieId, { status_id: newStatusId })
+      moviesApi.update(movieId, { status_id: newStatusId }, user.token)
         .catch((error) => {
           console.error('Error updating movie:', error);
           // Revertir cambios si falla
@@ -345,7 +351,7 @@ const App = () => {
       setMovies((prev) => prev.filter((m) => m.id !== movieId));
       
       // Hacer la petición en background (sin await)
-      moviesApi.delete(movieId)
+      moviesApi.delete(movieId, user.token)
         .catch((error) => {
           console.error('Error deleting movie:', error);
           // Revertir cambios si falla
@@ -387,7 +393,7 @@ const App = () => {
           year: tmdbData?.year || null,
           poster_path: tmdbData?.poster_path || null,
           status_id: statusId || 1,
-        });
+        }, user.token);
       }
 
       setCsvData('');
