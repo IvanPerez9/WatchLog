@@ -254,6 +254,7 @@ Ver [LICENSE](LICENSE) para más detalles.
 ## 🚀 Próximas mejoras
 
 **Fase 2 - Expansión de contenido:**
+- [ ] Exportar como CSV
 - [ ] Soporte para **series de TV** - Mismo sistema que películas
 - [ ] Soporte para **libros** - Gestiona tu biblioteca de lectura
 - [ ] API integrada para Google Books y TheTVDB

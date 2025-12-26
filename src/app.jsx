@@ -24,8 +24,6 @@ const App = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [showImport, setShowImport] = useState(false);
-  const [csvData, setCsvData] = useState('');
   
   // Estados de paginación
   const [currentPage, setCurrentPage] = useState(0);
@@ -366,47 +364,6 @@ const App = () => {
   };
 
   /**
-   * Importar películas desde CSV
-   */
-  const handleImportCSV = async () => {
-    if (!requireAuth(() => handleImportCSV())) return;
-    
-    if (!csvData.trim()) return;
-
-    try {
-      const lines = csvData.split('\n').filter((line) => line.trim());
-      const vistaStatus = statuses.find((s) => s.description === 'Vista');
-      const pendienteStatus = statuses.find((s) => s.description === 'Pendiente');
-
-      for (const line of lines) {
-        const [title, status] = line.split(',').map((s) => s.trim());
-        if (!title) continue;
-
-        const tmdbData = await tmdbApi.searchMovie(title);
-        const statusId =
-          status?.toLowerCase() === 'vista'
-            ? vistaStatus?.id
-            : pendienteStatus?.id;
-
-        await moviesApi.create({
-          title,
-          year: tmdbData?.year || null,
-          poster_path: tmdbData?.poster_path || null,
-          status_id: statusId || 1,
-        }, user.token);
-      }
-
-      setCsvData('');
-      setShowImport(false);
-      await loadMovies();
-      alert('Películas importadas correctamente');
-    } catch (error) {
-      console.error('Error importing CSV:', error);
-      alert('Error al importar CSV');
-    }
-  };
-
-  /**
    * Filtrar películas según búsqueda (en TODAS las películas)
    * Busca por título o año
    * Aplica paginación después de filtrar
@@ -457,12 +414,12 @@ const App = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
           <div className="flex items-center gap-3">
             <Film className="w-10 h-10 text-purple-400" />
-            <h1 className="text-4xl font-bold text-white">WatchLog</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold text-white">WatchLog</h1>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             <button
               onClick={() => {
                 if (!user) {
@@ -472,63 +429,21 @@ const App = () => {
                   fillMissingPosters(allMovies);
                 }
               }}
-              className={BUTTON_STYLES.primary_sm}
+              className={`${BUTTON_STYLES.primary_sm} flex-1 sm:flex-none text-sm`}
               title="Busca posters faltantes en background"
             >
-              🎬 Rellenar Posters
-            </button>
-            <button
-              onClick={() => {
-                if (!user) {
-                  setPendingAction(() => () => setShowImport(!showImport));
-                  setShowLoginModal(true);
-                } else {
-                  setShowImport(!showImport);
-                }
-              }}
-              className={BUTTON_STYLES.primary}
-            >
-              Importar CSV
+              🎬 Posters
             </button>
             {user && (
               <button
                 onClick={logout}
-                className={BUTTON_STYLES.danger}
+                className={`${BUTTON_STYLES.danger} flex-1 sm:flex-none text-sm`}
               >
                 Logout
               </button>
             )}
           </div>
         </div>
-
-        {/* Sección de importar CSV */}
-        {showImport && (
-          <div className="bg-slate-800 rounded-lg p-6 mb-6">
-            <h3 className="text-white text-lg font-semibold mb-3">
-              Importar desde CSV
-            </h3>
-            <textarea
-              value={csvData}
-              onChange={(e) => setCsvData(e.target.value)}
-              placeholder="Título,Estado&#10;Inception,vista&#10;Dune,pendiente"
-              className="w-full h-32 bg-slate-700 text-white p-3 rounded-lg mb-3"
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={handleImportCSV}
-                className={BUTTON_STYLES.primary}
-              >
-                Importar
-              </button>
-              <button
-                onClick={() => setShowImport(false)}
-                className={BUTTON_STYLES.secondary}
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Formulario añadir película */}
         <div className="mb-6">

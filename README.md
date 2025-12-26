@@ -241,6 +241,7 @@ See [LICENSE](LICENSE.md) for more details.
 ## 🚀 Future Improvements
 
 **Phase 2 - Content Expansion:**
+- [ ] Export as CSV
 - [ ] Support for **TV Series** - Same system as movies
 - [ ] Support for **Books** - Manage your reading library
 - [ ] Integrated APIs for Google Books and TheTVDB
