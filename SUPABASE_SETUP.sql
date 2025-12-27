@@ -33,8 +33,10 @@ CREATE TABLE IF NOT EXISTS movies (
   poster_path VARCHAR(500),
   status_id INTEGER NOT NULL REFERENCES statuses(id),
   user_token VARCHAR(255) NOT NULL REFERENCES valid_tokens(token),
+  rating DECIMAL(2,1) DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT rating_check CHECK (rating IS NULL OR (rating >= 0.5 AND rating <= 5 AND rating * 10 % 5 = 0))
 );
 
 -- ============================================
@@ -66,6 +68,9 @@ CREATE INDEX IF NOT EXISTS idx_valid_tokens_token ON valid_tokens(token);
 
 -- Index for user movies (by token)
 CREATE INDEX IF NOT EXISTS idx_movies_user_token ON movies(user_token);
+
+-- Index for rating (para filtros y ordenamiento)
+CREATE INDEX IF NOT EXISTS idx_movies_rating ON movies(rating DESC);
 
 -- ============================================
 -- 4. ENABLE ROW LEVEL SECURITY (RLS)

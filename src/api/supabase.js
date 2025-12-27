@@ -56,8 +56,8 @@ export const moviesApi = {
     const from = page * pageSize;
     const to = from + pageSize - 1;
     
-    // Construir query base con JOIN a status
-    let query = `movies?select=id,title,year,poster_path,status_id,status!inner(description)&order=id.desc`;
+    // Construir query base con JOIN a status (INCLUYE rating)
+    let query = `movies?select=id,title,year,poster_path,status_id,rating,status!inner(description)&order=id.desc`;
     
     // Añadir filtro por status si es necesario
     if (statusId !== null) {

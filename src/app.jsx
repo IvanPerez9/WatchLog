@@ -24,6 +24,7 @@ const App = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [minRating, setMinRating] = useState(0);
   
   // Estados de paginación
   const [currentPage, setCurrentPage] = useState(0);
@@ -66,7 +67,7 @@ const App = () => {
       loadAllMovies();
     } catch (error) {
       console.error('Error loading initial data:', error);
-      alert('Error al cargar datos. Revisa la consola.');
+      alert('Error loading data. Check the console.');
     } finally {
       setLoading(false);
     }
@@ -163,7 +164,7 @@ const App = () => {
   };
 
   /**
-   * Buscar y rellenar posters y años faltantes de forma asíncrona en background
+   * Search and fill missing posters asynchronously in the background
    */
   const fillMissingPosters = async (moviesToProcess) => {
     setFillingPosters(true);
@@ -283,7 +284,7 @@ const App = () => {
       }, 500);
     } catch (error) {
       console.error('Error adding movie:', error);
-      alert('Error al añadir película');
+      alert('Error adding movie');
     }
   };
 
@@ -320,11 +321,48 @@ const App = () => {
           // Revertir cambios si falla
           setAllMovies(oldAllMovies);
           setMovies(oldMovies);
-          alert('Error al actualizar película. Cambio revertido.');
+          alert('Error updating movie. Change reverted.');
         });
     } catch (error) {
       console.error('Error updating movie:', error);
-      alert('Error al actualizar película');
+      alert('Error updating movie');
+    }
+  };
+
+  /**
+   * Actualizar el rating de una película (optimistic update)
+   */
+  const handleRatingChange = async (movieId, newRating) => {
+    if (!requireAuth(() => handleRatingChange(movieId, newRating))) return;
+    
+    // Guardar estado anterior
+    const oldAllMovies = allMovies;
+    const oldMovies = movies;
+    
+    try {
+      // Actualizar inmediatamente
+      setAllMovies((prev) =>
+        prev.map((m) =>
+          m.id === movieId ? { ...m, rating: newRating } : m
+        )
+      );
+      
+      setMovies((prev) =>
+        prev.map((m) =>
+          m.id === movieId ? { ...m, rating: newRating } : m
+        )
+      );
+      
+      // Hacer la petición en background
+      moviesApi.update(movieId, { rating: newRating }, user.token)
+        .catch((error) => {
+          console.error('Error updating rating:', error);
+          // Revertir cambios si falla
+          setAllMovies(oldAllMovies);
+          setMovies(oldMovies);
+        });
+    } catch (error) {
+      console.error('Error updating rating:', error);
     }
   };
 
@@ -335,7 +373,7 @@ const App = () => {
   const handleDelete = async (movieId) => {
     if (!requireAuth(() => handleDelete(movieId))) return;
     
-    if (!confirm('¿Eliminar esta película?')) return;
+    if (!confirm('Delete this movie?')) return;
 
     // Guardar estados anteriores por si acaso falla
     const oldAllMovies = allMovies;
@@ -355,11 +393,11 @@ const App = () => {
           // Revertir cambios si falla
           setAllMovies(oldAllMovies);
           setMovies(oldMovies);
-          alert('Error al eliminar película. Cambio revertido.');
+          alert('Error deleting movie. Change reverted.');
         });
     } catch (error) {
       console.error('Error deleting movie:', error);
-      alert('Error al eliminar película');
+      alert('Error deleting movie');
     }
   };
 
@@ -383,7 +421,10 @@ const App = () => {
       year && 
       year.toString() === searchLower;
     
-    return matchesTitle || matchesYear;
+    // Filtrar por rating mínimo
+    const matchesRating = !minRating || (movie.rating && movie.rating >= minRating);
+    
+    return (matchesTitle || matchesYear) && matchesRating;
   });
 
   // Aplicar paginación al resultado de búsqueda
@@ -455,6 +496,8 @@ const App = () => {
           <Filters
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
+            minRating={minRating}
+            onMinRatingChange={setMinRating}
           />
         </div>
 
@@ -477,10 +520,10 @@ const App = () => {
 
         {/* Lista de películas */}
         {loading ? (
-          <div className="text-center text-white py-12">Cargando películas...</div>
+          <div className="text-center text-white py-12">Loading movies...</div>
         ) : filteredMovies.length === 0 ? (
           <div className="text-center text-slate-400 py-12">
-            No hay películas que mostrar
+            No movies to show
           </div>
         ) : (
           <>
@@ -492,6 +535,8 @@ const App = () => {
                   statuses={statuses}
                   onStatusChange={handleStatusChange}
                   onDelete={handleDelete}
+                  onRatingChange={handleRatingChange}
+                  user={user}
                 />
               ))}
             </div>
@@ -503,11 +548,11 @@ const App = () => {
                 disabled={currentPage === 0}
                 className={BUTTON_STYLES.secondary_lg}
               >
-                ← Anterior
+                ← Previous
               </button>
               
               <span className="text-white">
-                Página {currentPage + 1} de {searchTotalPages || 1}
+                Page {currentPage + 1} of {searchTotalPages || 1}
               </span>
               
               <button
@@ -515,7 +560,7 @@ const App = () => {
                 disabled={currentPage >= searchTotalPages - 1}
                 className={BUTTON_STYLES.secondary_lg}
               >
-                Siguiente →
+                Next →
               </button>
             </div>
           </>

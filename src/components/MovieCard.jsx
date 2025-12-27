@@ -2,18 +2,109 @@
  * Componente MovieCard
  * Representa una tarjeta individual de película
  * 
- * - movie: objeto con {id, title, year, status_id, poster_path}
- * - statuses: array de estados disponibles
- * - onStatusChange: callback cuando cambia el estado
+ * - movie: object with {id, title, year, status_id, poster_path}
+ * - statuses: array of available statuses
+ * - onStatusChange: callback when status changes
  * - onDelete: callback cuando se elimina
+ * - onRatingChange: callback cuando cambia la calificación
+ * - user: objeto del usuario actual
  */
 
 import React from 'react';
-import { Film, Trash2 } from 'lucide-react';
+import { Film, Trash2, Star } from 'lucide-react';
 import { tmdbApi } from '../api/tmdb.js';
 
-const MovieCard = ({ movie, statuses, onStatusChange, onDelete }) => {
+const MovieCard = ({ movie, statuses, onStatusChange, onDelete, onRatingChange, user }) => {
   const posterUrl = tmdbApi.getPosterUrl(movie.poster_path);
+  const [hoverRating, setHoverRating] = React.useState(0);
+  const rating = movie.rating || 0;
+
+  // Handle click on star (detect left or right half)
+  const handleStarClick = (starNumber, event) => {
+    // Don't allow rating if status is "Pending" (id = 1)
+    if (movie.status_id === 1) {
+      alert('You can\'t rate a pending movie. Update its status first.');
+      return;
+    }
+
+    if (!user) {
+      alert('Sign in to rate movies');
+      return;
+    }
+    
+    const rect = event.currentTarget.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const isLeftHalf = clickX < rect.width / 2;
+
+    const newRating = isLeftHalf ? starNumber - 0.5 : starNumber;
+    onRatingChange(movie.id, newRating);
+  };
+
+  // Handle hover for preview
+  const handleStarHover = (starNumber, event) => {
+    // Don't allow hover if status is "Pending" (id = 1)
+    if (movie.status_id === 1) {
+      setHoverRating(0);
+      return;
+    }
+    
+    const rect = event.currentTarget.getBoundingClientRect();
+    const hoverX = event.clientX - rect.left;
+    const isLeftHalf = hoverX < rect.width / 2;
+
+    const hoverValue = isLeftHalf ? starNumber - 0.5 : starNumber;
+    setHoverRating(hoverValue);
+  };
+
+  const getRatingText = (ratingValue) => {
+    const texts = {
+      0.5: '½ - Terrible',
+      1: '1 - Very Bad',
+      1.5: '1.5 - Bad',
+      2: '2 - Poor',
+      2.5: '2.5 - Fair',
+      3: '3 - Good',
+      3.5: '3.5 - Very Good',
+      4: '4 - Excellent',
+      4.5: '4.5 - Almost Perfect',
+      5: '5 - Perfect ✨',
+    };
+    return texts[ratingValue] || '';
+  };
+
+  // Renderizar estrellas (completas, media, vacías)
+  const renderStars = (fillAmount) => {
+    const stars = [];
+    
+    for (let i = 1; i <= 5; i++) {
+      const isFilled = fillAmount >= i;
+      const isHalf = fillAmount > i - 1 && fillAmount < i;
+
+      if (isFilled) {
+        stars.push(
+          <Star
+            key={i}
+            className="w-4 h-4 fill-yellow-400 text-yellow-400"
+          />
+        );
+      } else if (isHalf) {
+        // Media estrella
+        stars.push(
+          <div key={i} className="relative w-4 h-4">
+            <Star className="w-4 h-4 text-slate-600" />
+            <div className="absolute top-0 left-0 w-2 h-4 overflow-hidden">
+              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+            </div>
+          </div>
+        );
+      } else {
+        stars.push(
+          <Star key={i} className="w-4 h-4 text-slate-600" />
+        );
+      }
+    }
+    return stars;
+  };
 
   return (
     <div className="bg-slate-800 rounded-lg overflow-hidden group hover:ring-2 hover:ring-purple-500 transition">
@@ -45,14 +136,14 @@ const MovieCard = ({ movie, statuses, onStatusChange, onDelete }) => {
           <button
             onClick={() => onDelete(movie.id)}
             className="p-2 bg-red-600 hover:bg-red-700 rounded-full transition"
-            title="Eliminar película"
+            title="Delete movie"
           >
             <Trash2 className="w-4 h-4 text-white" />
           </button>
         </div>
       </div>
 
-      {/* Info de la película */}
+      {/* Info */}
       <div className="p-3">
         <h3 
           className="text-white font-semibold text-sm mb-1 truncate" 
@@ -65,7 +156,52 @@ const MovieCard = ({ movie, statuses, onStatusChange, onDelete }) => {
           <div className="text-slate-400 text-xs mb-2">{movie.year}</div>
         )}
 
-        {/* Selector de estado */}
+        {/* Rating with stars */}
+        <div className="mb-2 pb-2 border-b border-slate-700">
+          <div className="flex gap-0.5 mb-1">
+            {[1, 2, 3, 4, 5].map((starNumber) => (
+              <button
+                key={starNumber}
+                onClick={(e) => handleStarClick(starNumber, e)}
+                onMouseMove={(e) => handleStarHover(starNumber, e)}
+                onMouseLeave={() => setHoverRating(0)}
+                className={`transition transform ${
+                  movie.status_id !== 1 ? 'hover:scale-110 cursor-pointer' : 'cursor-not-allowed opacity-50'
+                }`}
+                disabled={movie.status_id === 1}
+                title={
+                  movie.status_id === 1 
+                    ? 'Rate when you change the status'
+                    : 'Left click for ½ star'
+                }
+              >
+                <div className="relative w-4 h-4">
+                  <Star className="absolute w-4 h-4 text-slate-600" />
+                  
+                  {starNumber <= (hoverRating || rating) ? (
+                    <Star className="absolute w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  ) : starNumber - 0.5 === (hoverRating || rating) ? (
+                    <div className="absolute top-0 left-0 w-2 h-4 overflow-hidden">
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                    </div>
+                  ) : null}
+                </div>
+              </button>
+            ))}
+          </div>
+          {rating > 0 && (
+            <p className="text-yellow-400 text-xs font-medium">
+              {rating}/5 - {getRatingText(rating)}
+            </p>
+          )}
+          {movie.status_id === 1 && (
+            <p className="text-slate-400 text-xs italic">
+              Rate when you watch it
+            </p>
+          )}
+        </div>
+
+        {/* Status selector */}
         <select
           value={movie.status_id}
           onChange={(e) => onStatusChange(movie.id, parseInt(e.target.value))}

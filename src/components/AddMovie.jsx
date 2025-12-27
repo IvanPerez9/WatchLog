@@ -31,7 +31,7 @@ const AddMovie = ({ onAdd }) => {
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Título de la película..."
+          placeholder="Movie title..."
           disabled={loading}
           className="flex-1 bg-slate-700 text-white px-4 py-3 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none disabled:opacity-50 text-sm sm:text-base"
         />
@@ -41,7 +41,7 @@ const AddMovie = ({ onAdd }) => {
           className="w-full sm:w-auto px-4 sm:px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg flex items-center justify-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base whitespace-nowrap"
         >
           <Plus className="w-5 h-5" />
-          {loading ? 'Añadiendo...' : 'Añadir'}
+          {loading ? 'Adding...' : 'Add'}
         </button>
       </form>
     </div>
