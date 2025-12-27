@@ -1,8 +1,6 @@
 /**
  * Vite lee las variables del .env que empiezan con VITE_
  */
-
-// TODO revisar url de tmdb
 const config = {
   supabase: {
     url: import.meta.env.VITE_SUPABASE_URL,

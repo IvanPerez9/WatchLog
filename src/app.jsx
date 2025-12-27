@@ -17,19 +17,31 @@ import { useAuth } from './auth/useAuth.js';
 import { BUTTON_STYLES } from './styles/buttonStyles.js';
 
 const App = () => {
-  // Estado global de la aplicación
-  const [movies, setMovies] = useState([]);  // Películas de la página actual (20)
-  const [allMovies, setAllMovies] = useState([]);  // Todas las películas (para búsqueda y stats)
+  // Get current page from URL params
+  const searchParams = new URLSearchParams(window.location.search);
+  const pageFromURL = parseInt(searchParams.get('page') || '0');
+  
+  // Global application state
+  const [movies, setMovies] = useState([]);  // Movies on current page (20)
+  const [allMovies, setAllMovies] = useState([]);  // All movies (for search and stats)
   const [statuses, setStatuses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [minRating, setMinRating] = useState(0);
   
-  // Estados de paginación
-  const [currentPage, setCurrentPage] = useState(0);
+  // Pagination state
+  const [currentPage, setCurrentPageInternal] = useState(pageFromURL);
   const [totalMovies, setTotalMovies] = useState(0);
   const pageSize = 20;
+
+  // Wrapper function to update page and URL
+  const setCurrentPage = (newPage) => {
+    setCurrentPageInternal(newPage);
+    const url = new URL(window.location);
+    url.searchParams.set('page', newPage);
+    window.history.replaceState({}, '', url);
+  };
 
   // Auth
   const { user, login, logout } = useAuth();
@@ -495,9 +507,15 @@ const App = () => {
         <div className="mb-6">
           <Filters
             searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
+            onSearchChange={(term) => {
+              setSearchTerm(term);
+              setCurrentPage(0);
+            }}
             minRating={minRating}
-            onMinRatingChange={setMinRating}
+            onMinRatingChange={(rating) => {
+              setMinRating(rating);
+              setCurrentPage(0);
+            }}
           />
         </div>
 
