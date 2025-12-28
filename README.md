@@ -8,8 +8,11 @@ Web application to manage your movie library. Track watched, pending, and in-pro
 
 [https://watchlog-vtlx.netlify.app/](https://watchlog-vtlx.netlify.app/) - Hosted on Netlify
 
-## 📋 Table of Contents
+See all features in action: authentication, adding movies with poster search, rating system, filters, and more.
 
+![WatchLog Demo](docs/media/WatchLog.gif)
+
+## � Table of Contents
 - [Description](#description)
   - [Why does it exist?](#why-does-it-exist)
   - [Principles](#principles)

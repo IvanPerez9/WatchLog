@@ -589,12 +589,12 @@ const App = () => {
       {showLoginModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-slate-800 rounded-lg p-8 w-full max-w-md">
-            <h2 className="text-white text-xl font-semibold mb-6">Necesitas autenticarte</h2>
+            <h2 className="text-white text-xl font-semibold mb-6">You need to authenticate</h2>
             
             <div className="space-y-4">
               <input
                 type="password"
-                placeholder="Pega tu Access Token"
+                placeholder="Paste your Access Token"
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
                 className="w-full bg-slate-700 text-white p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
@@ -605,7 +605,7 @@ const App = () => {
                   onClick={handleLoginModal}
                   className={BUTTON_STYLES.primary_lg}
                 >
-                  Entrar
+                  Sign In
                 </button>
                 <button
                   onClick={() => {
@@ -615,7 +615,7 @@ const App = () => {
                   }}
                   className={BUTTON_STYLES.secondary}
                 >
-                  Cancelar
+                  Cancel
                 </button>
               </div>
             </div>
