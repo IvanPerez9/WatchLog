@@ -1,12 +1,12 @@
 /**
- * Filters Component
- * Search and filter bar
+ * Componente Filters
+ * Barra de búsqueda
  * 
  * Props:
- * - searchTerm: current search term
- * - onSearchChange: callback when search changes
- * - minRating: minimum rating filter
- * - onMinRatingChange: callback when rating filter changes
+ * - searchTerm: término de búsqueda actual
+ * - onSearchChange: callback cuando cambia la búsqueda
+ * - minRating: filtro de calificación mínima
+ * - onMinRatingChange: callback cuando cambia el filtro de calificación
  */
 
 import React from 'react';

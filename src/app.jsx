@@ -17,19 +17,31 @@ import { useAuth } from './auth/useAuth.js';
 import { BUTTON_STYLES } from './styles/buttonStyles.js';
 
 const App = () => {
-  // Estado global de la aplicación
-  const [movies, setMovies] = useState([]);  // Películas de la página actual (20)
-  const [allMovies, setAllMovies] = useState([]);  // Todas las películas (para búsqueda y stats)
+  // Get current page from URL params
+  const searchParams = new URLSearchParams(window.location.search);
+  const pageFromURL = parseInt(searchParams.get('page') || '0');
+  
+  // Global application state
+  const [movies, setMovies] = useState([]);  // Movies on current page (20)
+  const [allMovies, setAllMovies] = useState([]);  // All movies (for search and stats)
   const [statuses, setStatuses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [minRating, setMinRating] = useState(0);
   
-  // Estados de paginación
-  const [currentPage, setCurrentPage] = useState(0);
+  // Pagination state
+  const [currentPage, setCurrentPageInternal] = useState(pageFromURL);
   const [totalMovies, setTotalMovies] = useState(0);
   const pageSize = 20;
+
+  // Wrapper function to update page and URL
+  const setCurrentPage = (newPage) => {
+    setCurrentPageInternal(newPage);
+    const url = new URL(window.location);
+    url.searchParams.set('page', newPage);
+    window.history.replaceState({}, '', url);
+  };
 
   // Auth
   const { user, login, logout } = useAuth();
@@ -495,9 +507,15 @@ const App = () => {
         <div className="mb-6">
           <Filters
             searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
+            onSearchChange={(term) => {
+              setSearchTerm(term);
+              setCurrentPage(0);
+            }}
             minRating={minRating}
-            onMinRatingChange={setMinRating}
+            onMinRatingChange={(rating) => {
+              setMinRating(rating);
+              setCurrentPage(0);
+            }}
           />
         </div>
 
@@ -571,12 +589,12 @@ const App = () => {
       {showLoginModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-slate-800 rounded-lg p-8 w-full max-w-md">
-            <h2 className="text-white text-xl font-semibold mb-6">Necesitas autenticarte</h2>
+            <h2 className="text-white text-xl font-semibold mb-6">You need to authenticate</h2>
             
             <div className="space-y-4">
               <input
                 type="password"
-                placeholder="Pega tu Access Token"
+                placeholder="Paste your Access Token"
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
                 className="w-full bg-slate-700 text-white p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
@@ -587,7 +605,7 @@ const App = () => {
                   onClick={handleLoginModal}
                   className={BUTTON_STYLES.primary_lg}
                 >
-                  Entrar
+                  Sign In
                 </button>
                 <button
                   onClick={() => {
@@ -597,7 +615,7 @@ const App = () => {
                   }}
                   className={BUTTON_STYLES.secondary}
                 >
-                  Cancelar
+                  Cancel
                 </button>
               </div>
             </div>
