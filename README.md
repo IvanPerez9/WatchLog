@@ -12,7 +12,7 @@ See all features in action: authentication, adding movies with poster search, ra
 
 ![WatchLog Demo](docs/media/WatchLog.gif)
 
-## � Table of Contents
+## 📋 Table of Contents
 - [Description](#description)
   - [Why does it exist?](#why-does-it-exist)
   - [Principles](#principles)
