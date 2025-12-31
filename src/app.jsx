@@ -49,6 +49,7 @@ const App = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showAddMovieModal, setShowAddMovieModal] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
+  const [shouldOpenAddMovieAfterLogin, setShouldOpenAddMovieAfterLogin] = useState(false);
   const [fillingPosters, setFillingPosters] = useState(false);
   const [posterStatus, setPosterStatus] = useState('');
 
@@ -102,8 +103,15 @@ const App = () => {
           setPendingAction(null);
         }, 50);
       }
+      // Abrir modal de Add Movie si fue el trigger
+      if (shouldOpenAddMovieAfterLogin) {
+        setTimeout(() => {
+          setShowAddMovieModal(true);
+          setShouldOpenAddMovieAfterLogin(false);
+        }, 50);
+      }
     } else {
-      alert('❌ Token inválido');
+      alert('❌ Invalid Token');
     }
   };
 
@@ -235,12 +243,10 @@ const App = () => {
   };
 
   /**
-   * Añadir una nueva película (optimistic update)
+   * Añadir una nueva película - versión INTERNA (sin verificación de auth)
    * Muestra la película al instante y busca poster/año en background
    */
-  const handleAddMovie = async (title) => {
-    if (!requireAuth(() => handleAddMovie(title))) return;
-    
+  const _addMovie = async (title) => {
     try {
       const pendingStatus = statuses.find((s) => s.description === 'Pendiente');
       
@@ -302,12 +308,17 @@ const App = () => {
   };
 
   /**
-   * Actualizar el estado de una película (optimistic update)
-   * Actualiza la UI inmediatamente y hace la petición en background
+   * Añadir película - versión PÚBLICA (con verificación de auth)
    */
-  const handleStatusChange = async (movieId, newStatusId) => {
-    if (!requireAuth(() => handleStatusChange(movieId, newStatusId))) return;
-    
+  const handleAddMovie = async (title) => {
+    if (!requireAuth(() => _addMovie(title))) return;
+    await _addMovie(title);
+  };
+
+  /**
+   * Actualizar estado - versión INTERNA (sin verificación de auth)
+   */
+  const _changeStatus = async (movieId, newStatusId) => {
     // Guardar estados anteriores por si acaso falla
     const oldAllMovies = allMovies;
     const oldMovies = movies;
@@ -343,11 +354,17 @@ const App = () => {
   };
 
   /**
-   * Actualizar el rating de una película (optimistic update)
+   * Actualizar estado - versión PÚBLICA (con verificación de auth)
    */
-  const handleRatingChange = async (movieId, newRating) => {
-    if (!requireAuth(() => handleRatingChange(movieId, newRating))) return;
-    
+  const handleStatusChange = async (movieId, newStatusId) => {
+    if (!requireAuth(() => _changeStatus(movieId, newStatusId))) return;
+    await _changeStatus(movieId, newStatusId);
+  };
+
+  /**
+   * Actualizar rating - versión INTERNA (sin verificación de auth)
+   */
+  const _updateRating = async (movieId, newRating) => {
     // Guardar estado anterior
     const oldAllMovies = allMovies;
     const oldMovies = movies;
@@ -380,12 +397,17 @@ const App = () => {
   };
 
   /**
-   * Eliminar una película (optimistic update)
-   * Elimina inmediatamente de la UI y hace la petición en background
+   * Actualizar rating - versión PÚBLICA (con verificación de auth)
    */
-  const handleDelete = async (movieId) => {
-    if (!requireAuth(() => handleDelete(movieId))) return;
-    
+  const handleRatingChange = async (movieId, newRating) => {
+    if (!requireAuth(() => _updateRating(movieId, newRating))) return;
+    await _updateRating(movieId, newRating);
+  };
+
+  /**
+   * Eliminar película - versión INTERNA (sin verificación de auth)
+   */
+  const _deleteMovie = async (movieId) => {
     if (!confirm('Delete this movie?')) return;
 
     // Guardar estados anteriores por si acaso falla
@@ -412,6 +434,14 @@ const App = () => {
       console.error('Error deleting movie:', error);
       alert('Error deleting movie');
     }
+  };
+
+  /**
+   * Eliminar película - versión PÚBLICA (con verificación de auth)
+   */
+  const handleDelete = async (movieId) => {
+    if (!requireAuth(() => _deleteMovie(movieId))) return;
+    await _deleteMovie(movieId);
   };
 
   /**
@@ -502,7 +532,7 @@ const App = () => {
             <button
               onClick={() => {
                 if (!user) {
-                  setPendingAction(() => () => setShowAddMovieModal(true));
+                  setShouldOpenAddMovieAfterLogin(true);
                   setShowLoginModal(true);
                 } else {
                   setShowAddMovieModal(true);
