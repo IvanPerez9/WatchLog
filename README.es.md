@@ -60,7 +60,7 @@ Aplicación web para gestionar tu biblioteca de películas. Trackea películas v
 
 ### Datos y Sincronización
 - 🖼️ **Pósters automáticos** - Sincronización con TMDB
--  **Sincronización en background** - Sin bloquear la interfaz
+- 💻 **Sincronización en background** - Sin bloquear la interfaz
 
 ### Interfaz
 - 📱 **Responsive design** - Funciona en móvil, tablet y desktop
@@ -253,9 +253,34 @@ Ver [LICENSE](LICENSE) para más detalles.
 
 ## 🚀 Próximas mejoras
 
-**Fase 2 - Expansión de contenido:**
-- [ ] Exportar como CSV
-- [ ] Soporte para **series de TV** - Mismo sistema que películas
-- [ ] Soporte para **libros** - Gestiona tu biblioteca de lectura
-- [ ] API integrada para Google Books y TheTVDB
+### Fase 2 - Export & Analytics
+- [ ] Exportar a CSV/JSON
+- [ ] Filtros avanzados (por rango de años, director, etc.)
+- [ ] Opciones de ordenamiento (por rating, fecha añadida, etc.)
 
+### Fase 3 - Soporte para Series
+- [ ] Tabla separada `series` en la base de datos
+- [ ] Integración con API TMDB para TV
+- [ ] Componente de serie con episodios/temporadas
+- [ ] Gestión de series (añadir, editar, eliminar, calificar)
+- [ ] Búsqueda y filtrado de series
+
+### Fase 4 - Soporte para Libros
+- [ ] Tabla separada `books` en la base de datos
+- [ ] Integración con Google Books API u OpenLibrary
+- [ ] Componente de libro con autor/ISBN
+- [ ] Búsqueda por ISBN
+- [ ] Gestión de libros (añadir, editar, eliminar, calificar)
+
+### Fase 5 - Características Avanzadas
+- [ ] Listas personalizadas y colecciones
+- [ ] Tema oscuro/claro
+- ...
+
+---
+
+<div align="center">
+
+[⬆️ Volver al inicio](#watchlog---movie-tracker)
+
+</div>

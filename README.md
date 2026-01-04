@@ -63,7 +63,7 @@ Web application to manage your movie library. Track watched, pending, and in-pro
 
 ### Data and Synchronization
 - 🖼️ **Automatic Posters** - TMDB synchronization
-- � **Background Sync** - Non-blocking interface for poster sync
+- 💻 **Background Sync** - Non-blocking interface for poster sync
 
 ### Interface
 - 📱 **Responsive Design** - Works on mobile, tablet and desktop
@@ -243,8 +243,34 @@ See [LICENSE](LICENSE.md) for more details.
 
 ## 🚀 Future Improvements
 
-**Phase 2 - Content Expansion:**
-- [ ] Export as CSV
-- [ ] Support for **TV Series** - Same system as movies
-- [ ] Support for **Books** - Manage your reading library
-- [ ] Integrated APIs for Google Books and TheTVDB
+### Phase 2 - Export & Analytics
+- [ ] CSV/JSON export functionality
+- [ ] Advanced filters (by year range, director, etc.)
+- [ ] Sort options (by rating, date added, etc.)
+
+### Phase 3 - TV Series Support
+- [ ] Separate `series` table in database
+- [ ] TMDB TV API integration
+- [ ] Series card component with episodes/seasons
+- [ ] Series management (add, edit, delete, rate)
+- [ ] Search and filter for series
+
+### Phase 4 - Books Support (Q2 2026)
+- [ ] Separate `books` table in database
+- [ ] Google Books API or OpenLibrary integration
+- [ ] Book card component with author/ISBN
+- [ ] ISBN search capability
+- [ ] Books management (add, edit, delete, rate)
+
+### Phase 5 - Advanced Features
+- [ ] Custom lists and collections
+- [ ] Dark/Light theme toggle
+- ...
+
+---
+
+<div align="center">
+
+[⬆️ Back to top](#watchlog---movie-tracker)
+
+</div>

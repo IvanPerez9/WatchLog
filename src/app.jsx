@@ -47,7 +47,9 @@ const App = () => {
   const { user, login, logout } = useAuth();
   const [token, setToken] = useState('');
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showAddMovieModal, setShowAddMovieModal] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
+  const [shouldOpenAddMovieAfterLogin, setShouldOpenAddMovieAfterLogin] = useState(false);
   const [fillingPosters, setFillingPosters] = useState(false);
   const [posterStatus, setPosterStatus] = useState('');
 
@@ -101,8 +103,15 @@ const App = () => {
           setPendingAction(null);
         }, 50);
       }
+      // Abrir modal de Add Movie si fue el trigger
+      if (shouldOpenAddMovieAfterLogin) {
+        setTimeout(() => {
+          setShowAddMovieModal(true);
+          setShouldOpenAddMovieAfterLogin(false);
+        }, 50);
+      }
     } else {
-      alert('❌ Token inválido');
+      alert('❌ Invalid Token');
     }
   };
 
@@ -234,12 +243,10 @@ const App = () => {
   };
 
   /**
-   * Añadir una nueva película (optimistic update)
+   * Añadir una nueva película - versión INTERNA (sin verificación de auth)
    * Muestra la película al instante y busca poster/año en background
    */
-  const handleAddMovie = async (title) => {
-    if (!requireAuth(() => handleAddMovie(title))) return;
-    
+  const _addMovie = async (title) => {
     try {
       const pendingStatus = statuses.find((s) => s.description === 'Pendiente');
       
@@ -301,12 +308,17 @@ const App = () => {
   };
 
   /**
-   * Actualizar el estado de una película (optimistic update)
-   * Actualiza la UI inmediatamente y hace la petición en background
+   * Añadir película - versión PÚBLICA (con verificación de auth)
    */
-  const handleStatusChange = async (movieId, newStatusId) => {
-    if (!requireAuth(() => handleStatusChange(movieId, newStatusId))) return;
-    
+  const handleAddMovie = async (title) => {
+    if (!requireAuth(() => _addMovie(title))) return;
+    await _addMovie(title);
+  };
+
+  /**
+   * Actualizar estado - versión INTERNA (sin verificación de auth)
+   */
+  const _changeStatus = async (movieId, newStatusId) => {
     // Guardar estados anteriores por si acaso falla
     const oldAllMovies = allMovies;
     const oldMovies = movies;
@@ -342,11 +354,17 @@ const App = () => {
   };
 
   /**
-   * Actualizar el rating de una película (optimistic update)
+   * Actualizar estado - versión PÚBLICA (con verificación de auth)
    */
-  const handleRatingChange = async (movieId, newRating) => {
-    if (!requireAuth(() => handleRatingChange(movieId, newRating))) return;
-    
+  const handleStatusChange = async (movieId, newStatusId) => {
+    if (!requireAuth(() => _changeStatus(movieId, newStatusId))) return;
+    await _changeStatus(movieId, newStatusId);
+  };
+
+  /**
+   * Actualizar rating - versión INTERNA (sin verificación de auth)
+   */
+  const _updateRating = async (movieId, newRating) => {
     // Guardar estado anterior
     const oldAllMovies = allMovies;
     const oldMovies = movies;
@@ -379,12 +397,17 @@ const App = () => {
   };
 
   /**
-   * Eliminar una película (optimistic update)
-   * Elimina inmediatamente de la UI y hace la petición en background
+   * Actualizar rating - versión PÚBLICA (con verificación de auth)
    */
-  const handleDelete = async (movieId) => {
-    if (!requireAuth(() => handleDelete(movieId))) return;
-    
+  const handleRatingChange = async (movieId, newRating) => {
+    if (!requireAuth(() => _updateRating(movieId, newRating))) return;
+    await _updateRating(movieId, newRating);
+  };
+
+  /**
+   * Eliminar película - versión INTERNA (sin verificación de auth)
+   */
+  const _deleteMovie = async (movieId) => {
     if (!confirm('Delete this movie?')) return;
 
     // Guardar estados anteriores por si acaso falla
@@ -411,6 +434,14 @@ const App = () => {
       console.error('Error deleting movie:', error);
       alert('Error deleting movie');
     }
+  };
+
+  /**
+   * Eliminar película - versión PÚBLICA (con verificación de auth)
+   */
+  const handleDelete = async (movieId) => {
+    if (!requireAuth(() => _deleteMovie(movieId))) return;
+    await _deleteMovie(movieId);
   };
 
   /**
@@ -468,10 +499,21 @@ const App = () => {
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-          <div className="flex items-center gap-3">
-            <Film className="w-10 h-10 text-purple-400" />
+          <button
+            onClick={() => {
+              // Reset everything to initial state
+              setSearchTerm('');
+              setCurrentPage(0);
+              setFilterStatus('all');
+              setMinRating(0);
+              setShowAddMovieModal(false);
+            }}
+            className="flex items-center gap-3 hover:opacity-80 transition cursor-pointer group"
+            title="Click to reset filters"
+          >
+            <Film className="w-10 h-10 text-purple-400 group-hover:scale-110 transition" />
             <h1 className="text-3xl sm:text-4xl font-bold text-white">WatchLog</h1>
-          </div>
+          </button>
           <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             <button
               onClick={() => {
@@ -487,6 +529,19 @@ const App = () => {
             >
               🎬 Posters
             </button>
+            <button
+              onClick={() => {
+                if (!user) {
+                  setShouldOpenAddMovieAfterLogin(true);
+                  setShowLoginModal(true);
+                } else {
+                  setShowAddMovieModal(true);
+                }
+              }}
+              className={`${BUTTON_STYLES.primary_sm} flex-1 sm:flex-none text-sm`}
+            >
+              ➕ Add Movie
+            </button>
             {user && (
               <button
                 onClick={logout}
@@ -496,11 +551,6 @@ const App = () => {
               </button>
             )}
           </div>
-        </div>
-
-        {/* Formulario añadir película */}
-        <div className="mb-6">
-          <AddMovie onAdd={handleAddMovie} />
         </div>
 
         {/* Filtros */}
@@ -623,6 +673,31 @@ const App = () => {
             <p className="text-slate-400 text-xs mt-4 text-center">
               Supabase → Settings → API → anon key
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Add Movie Modal */}
+      {showAddMovieModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 rounded-lg p-8 w-full max-w-md">
+            <h2 className="text-white text-xl font-semibold mb-6">Add New Movie</h2>
+            
+            <div className="mb-4">
+              <AddMovie 
+                onAdd={(title) => {
+                  handleAddMovie(title);
+                  setShowAddMovieModal(false);
+                }}
+              />
+            </div>
+            
+            <button
+              onClick={() => setShowAddMovieModal(false)}
+              className={BUTTON_STYLES.secondary}
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}
