@@ -13,6 +13,7 @@ import MovieCard from './components/MovieCard.jsx';
 import AddMovie from './components/AddMovie.jsx';
 import Filters from './components/Filters.jsx';
 import Stats from './components/Stats.jsx';
+import Export from './components/Export.jsx';
 import { useAuth } from './auth/useAuth.js';
 import { BUTTON_STYLES } from './styles/buttonStyles.js';
 
@@ -48,6 +49,7 @@ const App = () => {
   const [token, setToken] = useState('');
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showAddMovieModal, setShowAddMovieModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
   const [shouldOpenAddMovieAfterLogin, setShouldOpenAddMovieAfterLogin] = useState(false);
   const [fillingPosters, setFillingPosters] = useState(false);
@@ -530,6 +532,13 @@ const App = () => {
               🎬 Posters
             </button>
             <button
+              onClick={() => setShowExportModal(true)}
+              className={`${BUTTON_STYLES.primary_sm} flex-1 sm:flex-none text-sm`}
+              title="Exporta tu librería"
+            >
+              💾 Export
+            </button>
+            <button
               onClick={() => {
                 if (!user) {
                   setShouldOpenAddMovieAfterLogin(true);
@@ -700,6 +709,14 @@ const App = () => {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Export Modal */}
+      {showExportModal && (
+        <Export 
+          movies={allMovies}
+          onClose={() => setShowExportModal(false)}
+        />
       )}
     </div>
   );
