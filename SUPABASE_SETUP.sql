@@ -31,6 +31,8 @@ CREATE TABLE IF NOT EXISTS movies (
   title VARCHAR(255) NOT NULL,
   year INTEGER,
   poster_path VARCHAR(500),
+  director VARCHAR(255),
+  genres TEXT,
   status_id INTEGER NOT NULL REFERENCES statuses(id),
   user_token VARCHAR(255) NOT NULL REFERENCES valid_tokens(token),
   rating DECIMAL(2,1) DEFAULT NULL,
@@ -71,6 +73,12 @@ CREATE INDEX IF NOT EXISTS idx_movies_user_token ON movies(user_token);
 
 -- Index for rating (para filtros y ordenamiento)
 CREATE INDEX IF NOT EXISTS idx_movies_rating ON movies(rating DESC);
+
+-- Index for director searches
+CREATE INDEX IF NOT EXISTS idx_movies_director ON movies(director);
+
+-- Index for genre searches (using GiST for text search)
+CREATE INDEX IF NOT EXISTS idx_movies_genres ON movies USING GiST(genres gist_trgm_ops);
 
 -- ============================================
 -- 4. ENABLE ROW LEVEL SECURITY (RLS)
@@ -180,6 +188,14 @@ ON CONFLICT (token) DO NOTHING;
 
 -- Delete all movies (be careful!)
 -- DELETE FROM movies;
+
+-- ============================================
+-- MIGRATIONS (IF ADDING NEW COLUMNS TO EXISTING DB)
+-- ============================================
+-- Run these if you already have a movies table and need to add director and genres columns:
+
+-- ALTER TABLE movies ADD COLUMN IF NOT EXISTS director VARCHAR(255);
+-- ALTER TABLE movies ADD COLUMN IF NOT EXISTS genres TEXT;
 
 -- ============================================
 -- SECURITY CHECKLIST

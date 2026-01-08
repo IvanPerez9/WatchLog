@@ -255,7 +255,7 @@ Ver [LICENSE](LICENSE) para más detalles.
 
 ### Fase 2 - Export & Analytics ✅
 - [x] Exportar a CSV/JSON
-- [ ] Filtros avanzados (por rango de años, director, etc.)
+- [x] Filtros avanzados (por rango de años, director, etc.)
 - [ ] Opciones de ordenamiento (por rating, fecha añadida, etc.)
 
 ### Fase 3 - Soporte para Series

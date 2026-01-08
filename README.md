@@ -247,9 +247,8 @@ See [LICENSE](LICENSE.md) for more details.
 
 ### Phase 2 - Export & Analytics ✅
 - [x] CSV/JSON export functionality
-- [ ] Advanced filters (by year range, director, etc.)
+- [x] Advanced filters (by year range, director, etc.)
 - [ ] Sort options (by rating, date added, etc.)
-- [ ] Data analytics dashboard (charts, trends)
 
 ### Phase 3 - TV Series Support
 - [ ] Separate `series` table in database
@@ -268,7 +267,8 @@ See [LICENSE](LICENSE.md) for more details.
 ### Phase 5 - Advanced Features
 - [ ] Custom lists and collections
 - [ ] Dark/Light theme toggle
-- ...
+- [ ] Change languaje
+...
 
 ---
 
