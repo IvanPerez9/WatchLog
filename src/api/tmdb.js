@@ -10,6 +10,90 @@ import config from '../config.js';
  */
 export const tmdbApi = {
   /**
+   * Calcular similitud entre dos strings (0-1)
+   * Usa algoritmo simple: coincidencia de caracteres / longitud promedio
+   */
+  calculateSimilarity: (str1, str2) => {
+    const s1 = str1.toLowerCase().trim();
+    const s2 = str2.toLowerCase().trim();
+    
+    // Coincidencia exacta
+    if (s1 === s2) return 1;
+    
+    // Si uno es substring del otro
+    if (s1.includes(s2) || s2.includes(s1)) return 0.9;
+    
+    // Levenshtein distance simplificado
+    const longer = s1.length > s2.length ? s1 : s2;
+    const shorter = s1.length > s2.length ? s2 : s1;
+    
+    if (longer.length === 0) return 1;
+    
+    const editDistance = tmdbApi.levenshteinDistance(longer, shorter);
+    return (longer.length - editDistance) / longer.length;
+  },
+
+  /**
+   * Calcular distancia de Levenshtein entre dos strings
+   */
+  levenshteinDistance: (s1, s2) => {
+    const len1 = s1.length;
+    const len2 = s2.length;
+    const d = [];
+
+    for (let i = 0; i <= len1; i++) {
+      d[i] = [i];
+    }
+
+    for (let j = 0; j <= len2; j++) {
+      d[0][j] = j;
+    }
+
+    for (let i = 1; i <= len1; i++) {
+      for (let j = 1; j <= len2; j++) {
+        const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
+        d[i][j] = Math.min(
+          d[i - 1][j] + 1,
+          d[i][j - 1] + 1,
+          d[i - 1][j - 1] + cost
+        );
+      }
+    }
+
+    return d[len1][len2];
+  },
+
+  /**
+   * Encontrar el resultado más similar en una lista de películas
+   */
+  findBestMatch: (searchTitle, results) => {
+    if (!results || results.length === 0) return null;
+    
+    let bestMatch = results[0];
+    let highestSimilarity = tmdbApi.calculateSimilarity(searchTitle, results[0].title);
+    
+    // Comparar con original_title también
+    let originalSimilarity = tmdbApi.calculateSimilarity(searchTitle, results[0].original_title);
+    if (originalSimilarity > highestSimilarity) {
+      highestSimilarity = originalSimilarity;
+    }
+    
+    for (let i = 1; i < results.length; i++) {
+      const movie = results[i];
+      const titleSimilarity = tmdbApi.calculateSimilarity(searchTitle, movie.title);
+      const originalSimilarity = tmdbApi.calculateSimilarity(searchTitle, movie.original_title);
+      const maxSimilarity = Math.max(titleSimilarity, originalSimilarity);
+      
+      if (maxSimilarity > highestSimilarity) {
+        highestSimilarity = maxSimilarity;
+        bestMatch = movie;
+      }
+    }
+    
+    return bestMatch;
+  },
+
+  /**
    * Obtener lista de géneros disponibles
    * GET /genre/movie/list
    * 
@@ -112,7 +196,12 @@ export const tmdbApi = {
         return null;
       }
 
-      const movieBasic = searchData.results[0];
+      // Encontrar el resultado más similar al título buscado
+      const movieBasic = tmdbApi.findBestMatch(title, searchData.results);
+      if (!movieBasic) {
+        return null;
+      }
+      
       const movieId = movieBasic.id;
 
       // 2. Obtener detalles completos (incluyendo géneros)
