@@ -61,7 +61,11 @@ const App = () => {
   const [selectedGenre, setSelectedGenre] = useState(null);
 
   // Series state (Phase 3)
-  const [viewMode, setViewMode] = useState('movies'); // 'movies' or 'series'
+  const [viewMode, setViewMode] = useState(() => {
+    // Cargar viewMode del localStorage al inicializar
+    const savedViewMode = localStorage.getItem('watchlog_viewMode');
+    return savedViewMode || 'movies';
+  });
   const [series, setSeries] = useState([]);
   const [allSeries, setAllSeries] = useState([]);
   const [totalSeries, setTotalSeries] = useState(0);
@@ -72,6 +76,11 @@ const App = () => {
   useEffect(() => {
     loadInitialData();
   }, []);
+
+  // Guardar viewMode en localStorage cuando cambia
+  useEffect(() => {
+    localStorage.setItem('watchlog_viewMode', viewMode);
+  }, [viewMode]);
 
   // Recargar películas/series cuando cambia la página, el filtro o el modo de vista
   useEffect(() => {
@@ -499,6 +508,49 @@ const App = () => {
   };
 
   /**
+   * Actualizar rating de serie - versión INTERNA (sin verificación de auth)
+   */
+  const _updateSeriesRating = async (seriesId, newRating) => {
+    // Guardar estado anterior
+    const oldAllSeries = allSeries;
+    const oldSeries = series;
+    
+    try {
+      // Actualizar inmediatamente
+      setAllSeries((prev) =>
+        prev.map((s) =>
+          s.id === seriesId ? { ...s, rating: newRating } : s
+        )
+      );
+      
+      setSeries((prev) =>
+        prev.map((s) =>
+          s.id === seriesId ? { ...s, rating: newRating } : s
+        )
+      );
+      
+      // Hacer la petición en background
+      seriesApi.update(seriesId, { rating: newRating }, user.token)
+        .catch((error) => {
+          console.error('Error updating series rating:', error);
+          // Revertir cambios si falla
+          setAllSeries(oldAllSeries);
+          setSeries(oldSeries);
+        });
+    } catch (error) {
+      console.error('Error updating series rating:', error);
+    }
+  };
+
+  /**
+   * Actualizar rating de serie - versión PÚBLICA (con verificación de auth)
+   */
+  const handleSeriesRatingChange = async (seriesId, newRating) => {
+    if (!requireAuth(() => _updateSeriesRating(seriesId, newRating))) return;
+    await _updateSeriesRating(seriesId, newRating);
+  };
+
+  /**
    * Eliminar película - versión INTERNA (sin verificación de auth)
    */
   const _deleteMovie = async (movieId) => {
@@ -594,7 +646,6 @@ const App = () => {
         total_seasons: tmdbData?.total_seasons || null,
         current_season: 1,
         status_id: pendingStatus?.id || 1,
-        user_token: user.token || '',
       }, user.token);
       
       // Reemplazar serie temporal con la real
@@ -992,7 +1043,7 @@ const App = () => {
           <>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {displayList.map((item) => (
-                <div key={item.id}>
+                <div key={`${viewMode}-${item.id}`}>
                   {viewMode === 'movies' ? (
                     <MovieCard
                       movie={item}
@@ -1009,7 +1060,7 @@ const App = () => {
                       onStatusChange={handleSeriesStatusChange}
                       onDelete={handleSeriesDelete}
                       onUpdate={handleSeriesUpdate}
-                      onRatingChange={handleRatingChange}
+                      onRatingChange={handleSeriesRatingChange}
                       user={user}
                     />
                   )}

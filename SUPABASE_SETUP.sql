@@ -110,13 +110,10 @@ CREATE INDEX IF NOT EXISTS idx_series_year ON series(year);
 -- Index for faster filtering by status (series)
 CREATE INDEX IF NOT EXISTS idx_series_status_id ON series(status_id);
 
--- Index for user series (by token)
-CREATE INDEX IF NOT EXISTS idx_series_user_token ON series(user_token);
-
 -- Index for rating (series)
 CREATE INDEX IF NOT EXISTS idx_series_rating ON series(rating DESC);
 
--- Index for director searches (series)
+-- Index for genres searches (series)
 CREATE INDEX IF NOT EXISTS idx_series_genres ON series(genres);
 
 -- ============================================

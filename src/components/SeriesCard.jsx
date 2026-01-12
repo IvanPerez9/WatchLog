@@ -67,49 +67,38 @@ export const SeriesCard = ({ series, statuses, onDelete, onUpdate, onStatusChang
     setHoverRating(hoverValue);
   };
 
-  const renderStars = (fillAmount) => {
-    const stars = [];
+  const renderStars = () => {
+    const rating = hoverRating || series.rating || 0;
     
-    for (let i = 1; i <= 5; i++) {
-      const isFilled = fillAmount >= i;
-      const isHalf = fillAmount > i - 1 && fillAmount < i;
-
-      if (isFilled) {
-        stars.push(
-          <Star
-            key={i}
-            className="w-4 h-4 fill-yellow-400 text-yellow-400 cursor-pointer"
-            onMouseEnter={(e) => handleStarHover(i, e)}
-            onMouseLeave={() => setHoverRating(0)}
-            onClick={(e) => handleStarClick(i, e)}
-          />
-        );
-      } else if (isHalf) {
-        stars.push(
-          <div key={i} className="relative w-4 h-4 cursor-pointer"
-            onMouseEnter={(e) => handleStarHover(i, e)}
-            onMouseLeave={() => setHoverRating(0)}
-            onClick={(e) => handleStarClick(i, e)}
-          >
-            <Star className="w-4 h-4 text-slate-600" />
+    return [1, 2, 3, 4, 5].map((starNumber) => (
+      <button
+        key={starNumber}
+        onClick={(e) => handleStarClick(starNumber, e)}
+        onMouseMove={(e) => handleStarHover(starNumber, e)}
+        onMouseLeave={() => setHoverRating(0)}
+        className={`transition transform ${
+          series.status_id !== 1 ? 'hover:scale-110 cursor-pointer' : 'cursor-not-allowed opacity-50'
+        }`}
+        disabled={series.status_id === 1}
+        title={
+          series.status_id === 1 
+            ? 'Rate when you change the status'
+            : 'Left click for ½ star'
+        }
+      >
+        <div className="relative w-4 h-4">
+          <Star className="absolute w-4 h-4 text-slate-600" />
+          
+          {starNumber <= rating ? (
+            <Star className="absolute w-4 h-4 fill-yellow-400 text-yellow-400" />
+          ) : starNumber - 0.5 === rating ? (
             <div className="absolute top-0 left-0 w-2 h-4 overflow-hidden">
               <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
             </div>
-          </div>
-        );
-      } else {
-        stars.push(
-          <Star
-            key={i}
-            className="w-4 h-4 text-slate-600 cursor-pointer"
-            onMouseEnter={(e) => handleStarHover(i, e)}
-            onMouseLeave={() => setHoverRating(0)}
-            onClick={(e) => handleStarClick(i, e)}
-          />
-        );
-      }
-    }
-    return stars;
+          ) : null}
+        </div>
+      </button>
+    ));
   };
 
   const progressPercentage = series.total_seasons 
@@ -178,7 +167,7 @@ export const SeriesCard = ({ series, statuses, onDelete, onUpdate, onStatusChang
         {/* Rating Stars - Interactive */}
         <div className="flex items-center gap-1 mb-2">
           <div className="flex gap-0.5">
-            {renderStars(hoverRating || series.rating || 0)}
+            {renderStars()}
           </div>
           <span className="text-xs text-slate-400">{series.rating ? series.rating.toFixed(1) : '-'}</span>
         </div>

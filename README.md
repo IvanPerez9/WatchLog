@@ -52,26 +52,31 @@ Web application to manage your movie library. Track watched, pending, and in-pro
 ## ✨ Features
 
 ### Core
-- 🎬 **Complete CRUD** - Create, read, update and delete movies
+- 🎬 **Movies & Series** - Complete CRUD for movies and TV series
 - 🔐 **Secure Authentication** - Token-based with database validation
 - 💾 **Persistence** - All data stored in PostgreSQL (Supabase)
 
+### Status Management
+- **Movies**: Pending, Watched, Favorite
+- **Series**: Pending, Watched, Favorite, Watching (track current series)
+- Track seasons watched for series with progress bar
+
 ### Search and Filtering
-- 🔍 **Global Search** - By title or year across your entire library
-- 🎭 **Filter by Status** - Pending, Watched, Watching, Favorite
-- 📊 **Statistics** - Visualize movie count by status
+- 🔍 **Global Search** - By title, year, or director
+- 🎭 **Filter by Status** - View content by current status
+- ⭐ **Filter by Rating** - Find highly-rated content
+- 🎬 **Filter by Genre** - Organize by content type
+- 📊 **Statistics** - Visual breakdown by status
 
 ### Data and Synchronization
-- 🖼️ **Automatic Posters** - TMDB synchronization
-- 💻 **Background Sync** - Non-blocking interface for poster sync
-- 📥 **Export Data** - Download your library as CSV or JSON
-- 📥 **Export Data** - Download your library as CSV or JSON
+- 🖼️ **Automatic Posters** - TMDB integration for covers
+- ⭐ **Rating System** - Rate with half-star precision
+- 📥 **Export Data** - Download library as CSV or JSON
 
 ### Interface
-- 📱 **Responsive Design** - Works on mobile, tablet and desktop
-- ⭐ **Rating System** - Rate movies with half-star precision
-- ⭐ **Rating System** - Rate movies with half-star precision
-- ⚡ **Ultra Fast** - Instant loading, built with Vite
+- 📱 **Responsive Design** - Mobile, tablet and desktop
+- ⚡ **Ultra Fast** - Built with Vite
+- 🌙 **Dark Theme** - Easy on the eyes
 
 ## 📋 Requirements
 
@@ -154,19 +159,25 @@ Open http://localhost:3000
 
 ## 💻 Usage
 
-### Public Access (Read-Only)
-- 👁️ View your movies
-- 🔍 Search by title or year  
-- 🎭 Filter by status
-- 📊 View statistics
+## 💻 Usage
 
-### Authenticated Access (Write)
-Enter your token in the app to:
-- ➕ Add new movies
-- ✏️ Change movie status
-- 🗑️ Delete movies
-- 🔄 Auto-sync posters with TMDB
+### View & Search
+- 👁️ Switch between Movies and Series tabs
+- 🔍 Search by title, year, or director
+- 🎭 Filter by status (Pending, Watched, Favorite, Watching)
+- ⭐ Filter by minimum rating
 
+### Manage Content
+Sign in with your token to:
+- ➕ Add new movies/series
+- ⭐ Rate with half-star precision
+- 🎯 Change status
+- 🗑️ Delete items
+
+### Series-Specific
+- 📺 Track current season with +/- buttons
+- 📊 Progress bar shows seasons watched
+- 📥 Auto-sync from TMDB
 
 ## 🚀 Deploy
 

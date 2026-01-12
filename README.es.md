@@ -49,22 +49,31 @@ Aplicación web para gestionar tu biblioteca de películas. Trackea películas v
 ## ✨ Características
 
 ### Core
-- 🎬 **CRUD completo** - Crear, leer, actualizar y eliminar películas
+- 🎬 **Películas y Series** - CRUD completo para películas y series TV
 - 🔐 **Autenticación segura** - Token-based con validación en base de datos
 - 💾 **Persistencia** - Todos los datos guardados en PostgreSQL (Supabase)
 
+### Gestión de Estados
+- **Películas**: Pendiente, Vista, Favorita
+- **Series**: Pendiente, Vista, Favorita, Viendo (trackea series actuales)
+- Seguimiento de temporadas con barra de progreso
+
 ### Búsqueda y Filtrado
-- 🔍 **Búsqueda global** - Por título o año en toda tu biblioteca
-- 🎭 **Filtrado por estado** - Pendiente, Vista, Viendo, Favorita
-- 📊 **Estadísticas** - Visualiza conteo de películas por estado
+- 🔍 **Búsqueda global** - Por título, año o director
+- 🎭 **Filtrado por estado** - Visualiza por estado actual
+- ⭐ **Filtrado por rating** - Encuentra contenido mejor valorado
+- 🎬 **Filtrado por género** - Organiza por tipo de contenido
+- 📊 **Estadísticas** - Desglose visual por estado
 
 ### Datos y Sincronización
-- 🖼️ **Pósters automáticos** - Sincronización con TMDB
-- 💻 **Sincronización en background** - Sin bloquear la interfaz
+- 🖼️ **Pósters automáticos** - Integración con TMDB
+- ⭐ **Sistema de rating** - Valora con precisión de media estrella
+- 📥 **Exporta datos** - Descarga tu biblioteca como CSV o JSON
 
 ### Interfaz
-- 📱 **Responsive design** - Funciona en móvil, tablet y desktop
-- ⚡ **Ultra rápido** - Carga instantánea, construcción con Vite
+- 📱 **Responsive design** - Móvil, tablet y desktop
+- ⚡ **Ultra rápido** - Construido con Vite
+- 🌙 **Tema oscuro** - Fácil para la vista
 
 ## 📋 Requisitos
 
@@ -147,18 +156,23 @@ Abre http://localhost:3000
 
 ## 💻 Uso
 
-### Sin autenticación (Lectura)
-- Ver películas
-- Buscar por título o año
-- Filtrar por estado
-- Ver estadísticas
+### Ver y Buscar
+- 👁️ Cambia entre pestaña Películas y Series
+- 🔍 Busca por título, año o director
+- 🎭 Filtra por estado (Pendiente, Vista, Favorita, Viendo)
+- ⭐ Filtra por rating mínimo
 
-### Acceso Autenticado (Escritura)
-Ingresa tu token para:
-- ➕ Agregar películas nuevas
-- ✏️ Cambiar estado de películas
-- 🗑️ Eliminar películas
-- 🔄 Sincronizar pósters con TMDB
+### Gestionar Contenido
+Inicia sesión con tu token para:
+- ➕ Agregar películas/series nuevas
+- ⭐ Valora con precisión de media estrella
+- 🎯 Cambia estado
+- 🗑️ Elimina elementos
+
+### Específico para Series
+- 📺 Trackea temporada actual con botones +/-
+- 📊 Barra de progreso muestra temporadas vistas
+- 📥 Auto-sincronización desde TMDB
 
 ## 🚀 Deploy
 
