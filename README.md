@@ -248,7 +248,7 @@ See [LICENSE](LICENSE.md) for more details.
 ### Phase 2 - Export & Analytics ✅
 - [x] CSV/JSON export functionality
 - [x] Advanced filters (by year range, director, etc.)
-- [ ] Sort options (by rating, date added, etc.)
+- [x] Sort options (by rating, date added, etc.)
 
 ### Phase 3 - TV Series Support
 - [ ] Separate `series` table in database
