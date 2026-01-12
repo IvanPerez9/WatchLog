@@ -65,9 +65,11 @@ Web application to manage your movie library. Track watched, pending, and in-pro
 - 🖼️ **Automatic Posters** - TMDB synchronization
 - 💻 **Background Sync** - Non-blocking interface for poster sync
 - 📥 **Export Data** - Download your library as CSV or JSON
+- 📥 **Export Data** - Download your library as CSV or JSON
 
 ### Interface
 - 📱 **Responsive Design** - Works on mobile, tablet and desktop
+- ⭐ **Rating System** - Rate movies with half-star precision
 - ⭐ **Rating System** - Rate movies with half-star precision
 - ⚡ **Ultra Fast** - Instant loading, built with Vite
 
@@ -267,6 +269,8 @@ See [LICENSE](LICENSE.md) for more details.
 ### Phase 5 - Advanced Features
 - [ ] Custom lists and collections
 - [ ] Dark/Light theme toggle
+- [ ] Change languaje
+...
 - [ ] Change languaje
 ...
 
