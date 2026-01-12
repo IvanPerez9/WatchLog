@@ -13,6 +13,7 @@ import MovieCard from './components/MovieCard.jsx';
 import AddMovie from './components/AddMovie.jsx';
 import Filters from './components/Filters.jsx';
 import Stats from './components/Stats.jsx';
+import Export from './components/Export.jsx';
 import { useAuth } from './auth/useAuth.js';
 import { BUTTON_STYLES } from './styles/buttonStyles.js';
 
@@ -48,10 +49,15 @@ const App = () => {
   const [token, setToken] = useState('');
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showAddMovieModal, setShowAddMovieModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
   const [shouldOpenAddMovieAfterLogin, setShouldOpenAddMovieAfterLogin] = useState(false);
-  const [fillingPosters, setFillingPosters] = useState(false);
-  const [posterStatus, setPosterStatus] = useState('');
+  const [fillingTMDB, setFillingTMDB] = useState(false);
+  const [tmdbFillStatus, setTMDBFillStatus] = useState('');
+  
+  // Genre filter
+  const [genres, setGenres] = useState([]);
+  const [selectedGenre, setSelectedGenre] = useState(null);
 
   /**
    * useEffect se ejecuta cuando el componente se monta o cuando cambian las dependencias
@@ -69,12 +75,13 @@ const App = () => {
   }, [currentPage, filterStatus]);
 
   /**
-   * Cargar datos iniciales (estados y películas)
+   * Cargar datos iniciales (estados, géneros y películas)
    */
   const loadInitialData = async () => {
     try {
       setLoading(true);
       await loadStatuses();
+      await loadGenres();
       await loadMovies();
       
       // Cargar todas las películas en background
@@ -85,6 +92,14 @@ const App = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  /**
+   * Cargar géneros desde TMDB
+   */
+  const loadGenres = async () => {
+    const data = await tmdbApi.getGenreList();
+    setGenres(data || []);
   };
 
   /**
@@ -185,32 +200,32 @@ const App = () => {
   };
 
   /**
-   * Search and fill missing posters asynchronously in the background
+   * Search and fill missing TMDB data (posters/year/director/genres) asynchronously in the background
    */
-  const fillMissingPosters = async (moviesToProcess) => {
-    setFillingPosters(true);
-    setPosterStatus('Preparando búsqueda...');
+  const fillMissingTMDBData = async (moviesToProcess) => {
+    setFillingTMDB(true);
+    setTMDBFillStatus('Preparando búsqueda...');
     
-    const moviesWithoutPoster = moviesToProcess
-      .filter((m) => !m.poster_path)
+    const moviesWithMissingData = moviesToProcess
+      .filter((m) => !m.poster_path || !m.year || !m.director || !m.genres)
       .sort((a, b) => b.id - a.id);
     
-    if (moviesWithoutPoster.length === 0) {
-      setPosterStatus('✅ Todas las películas tienen poster');
-      setFillingPosters(false);
+    if (moviesWithMissingData.length === 0) {
+      setTMDBFillStatus('✅ Toda la información está completa');
+      setFillingTMDB(false);
       return;
     }
 
-    setPosterStatus(`🎬 Encontradas ${moviesWithoutPoster.length} películas sin poster. Iniciando búsqueda...`);
+    setTMDBFillStatus(`🎬 Encontradas ${moviesWithMissingData.length} películas incompletas. Iniciando búsqueda...`);
 
     let updated = 0;
-    for (const movie of moviesWithoutPoster) {
+    for (const movie of moviesWithMissingData) {
       try {
-        setPosterStatus(`⏳ Buscando: ${movie.title}...`);
+        setTMDBFillStatus(`⏳ Buscando información: ${movie.title}...`);
         
         const tmdbData = await tmdbApi.searchMovie(movie.title);
 
-        if (tmdbData?.poster_path || tmdbData?.year) {
+        if (tmdbData?.poster_path || tmdbData?.year || tmdbData?.director || tmdbData?.genres) {
           const updates = {};
           
           if (tmdbData.poster_path) {
@@ -220,31 +235,39 @@ const App = () => {
           if (tmdbData.year && !movie.year) {
             updates.year = tmdbData.year;
           }
+
+          if (tmdbData.director && !movie.director) {
+            updates.director = tmdbData.director;
+          }
+
+          if (tmdbData.genres && !movie.genres) {
+            updates.genres = JSON.stringify(tmdbData.genres);
+          }
           
           if (Object.keys(updates).length > 0) {
             await moviesApi.update(movie.id, updates, user.token);
             updated++;
-            setPosterStatus(`✅ ${updated}/${moviesWithoutPoster.length} películas actualizadas`);
+            setTMDBFillStatus(`✅ ${updated}/${moviesWithMissingData.length} películas actualizadas`);
           }
         } else {
-          setPosterStatus(`⚠️ Sin información: ${movie.title}`);
+          setTMDBFillStatus(`⚠️ Sin información: ${movie.title}`);
         }
 
         await new Promise((resolve) => setTimeout(resolve, 500));
       } catch (error) {
         console.error(`Error procesando ${movie.title}:`, error);
-        setPosterStatus(`❌ Error en: ${movie.title}`);
+        setTMDBFillStatus(`❌ Error en: ${movie.title}`);
       }
     }
 
-    setPosterStatus(`🎉 ¡Completado! ${updated} películas actualizadas`);
+    setTMDBFillStatus(`🎉 ¡Completado! ${updated} películas actualizadas`);
     await loadAllMovies();
-    setFillingPosters(false);
+    setFillingTMDB(false);
   };
 
   /**
    * Añadir una nueva película - versión INTERNA (sin verificación de auth)
-   * Muestra la película al instante y busca poster/año en background
+   * Muestra la película al instante y busca poster/año/director/géneros en background
    */
   const _addMovie = async (title) => {
     try {
@@ -257,6 +280,8 @@ const App = () => {
         title: title,
         year: null,
         poster_path: null,
+        director: null,
+        genres: null,
         status_id: pendingStatus?.id || 1,
         created_at: new Date().toISOString(),
       };
@@ -264,7 +289,7 @@ const App = () => {
       // Añadir al instante a la UI
       setAllMovies((prev) => [tempMovie, ...prev]);
       
-      // Buscar en TMDB en background
+      // Buscar en TMDB en background (obtiene año, poster, director, géneros)
       const tmdbData = await tmdbApi.searchMovie(title);
       
       // Actualizar la película temporal con datos de TMDB
@@ -275,16 +300,20 @@ const App = () => {
                 ...m,
                 year: tmdbData?.year || null,
                 poster_path: tmdbData?.poster_path || null,
+                director: tmdbData?.director || null,
+                genres: tmdbData?.genres ? JSON.stringify(tmdbData.genres) : null,
               }
             : m
         )
       );
       
-      // Crear en la BD
+      // Crear en la BD con todos los datos
       const createdMovie = await moviesApi.create({
         title: title,
         year: tmdbData?.year || null,
         poster_path: tmdbData?.poster_path || null,
+        director: tmdbData?.director || null,
+        genres: tmdbData?.genres ? JSON.stringify(tmdbData.genres) : null,
         status_id: pendingStatus?.id || 1,
       }, user.token);
       
@@ -445,13 +474,14 @@ const App = () => {
   };
 
   /**
-   * Filtrar películas según búsqueda (en TODAS las películas)
-   * Busca por título o año
+   * Filtrar películas según búsqueda, rating y género
+   * Busca por título, año o director
    * Aplica paginación después de filtrar
    */
   const searchedMovies = allMovies.filter((movie) => {
     const title = movie.title || '';
     const year = movie.year;
+    const director = movie.director || '';
     const searchLower = searchTerm.toLowerCase().trim();
     
     // Buscar por título
@@ -464,10 +494,27 @@ const App = () => {
       year && 
       year.toString() === searchLower;
     
+    // Buscar por director
+    const matchesDirector = searchLower && 
+      director
+        .toLowerCase()
+        .includes(searchLower);
+    
     // Filtrar por rating mínimo
     const matchesRating = !minRating || (movie.rating && movie.rating >= minRating);
     
-    return (matchesTitle || matchesYear) && matchesRating;
+    // Filtrar por género
+    let matchesGenre = true;
+    if (selectedGenre) {
+      try {
+        const movieGenres = movie.genres ? JSON.parse(movie.genres) : [];
+        matchesGenre = movieGenres.includes(selectedGenre);
+      } catch (e) {
+        matchesGenre = false;
+      }
+    }
+    
+    return (matchesTitle || matchesYear || matchesDirector) && matchesRating && matchesGenre;
   });
 
   // Aplicar paginación al resultado de búsqueda
@@ -506,6 +553,7 @@ const App = () => {
               setCurrentPage(0);
               setFilterStatus('all');
               setMinRating(0);
+              setSelectedGenre(null);
               setShowAddMovieModal(false);
             }}
             className="flex items-center gap-3 hover:opacity-80 transition cursor-pointer group"
@@ -518,16 +566,23 @@ const App = () => {
             <button
               onClick={() => {
                 if (!user) {
-                  setPendingAction(() => () => fillMissingPosters(allMovies));
+                  setPendingAction(() => () => fillMissingTMDBData(allMovies));
                   setShowLoginModal(true);
                 } else {
-                  fillMissingPosters(allMovies);
+                  fillMissingTMDBData(allMovies);
                 }
               }}
               className={`${BUTTON_STYLES.primary_sm} flex-1 sm:flex-none text-sm`}
-              title="Busca posters faltantes en background"
+              title="Completa poster, año, director y géneros desde TMDB"
             >
-              🎬 Posters
+              🔍 Complete TMDB
+            </button>
+            <button
+              onClick={() => setShowExportModal(true)}
+              className={`${BUTTON_STYLES.primary_sm} flex-1 sm:flex-none text-sm`}
+              title="Exporta tu librería"
+            >
+              💾 Export
             </button>
             <button
               onClick={() => {
@@ -566,6 +621,12 @@ const App = () => {
               setMinRating(rating);
               setCurrentPage(0);
             }}
+            selectedGenre={selectedGenre}
+            onGenreChange={(genre) => {
+              setSelectedGenre(genre);
+              setCurrentPage(0);
+            }}
+            genres={genres}
           />
         </div>
 
@@ -579,10 +640,10 @@ const App = () => {
           />
         </div>
 
-        {/* Status de rellenar posters */}
-        {fillingPosters && (
+        {/* Status de completar datos TMDB */}
+        {fillingTMDB && (
           <div className="bg-slate-800 rounded-lg p-4 mb-6 border border-blue-500">
-            <p className="text-white text-sm">{posterStatus}</p>
+            <p className="text-white text-sm">{tmdbFillStatus}</p>
           </div>
         )}
 
@@ -700,6 +761,14 @@ const App = () => {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Export Modal */}
+      {showExportModal && (
+        <Export 
+          movies={allMovies}
+          onClose={() => setShowExportModal(false)}
+        />
       )}
     </div>
   );
