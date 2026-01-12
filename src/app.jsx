@@ -5,11 +5,12 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Film } from 'lucide-react';
-import { moviesApi, statusesApi } from './api/supabase.js';
+import { Film, Tv } from 'lucide-react';
+import { moviesApi, seriesApi, statusesApi } from './api/supabase.js';
 import { tmdbApi } from './api/tmdb.js';
 import config from './config.js';
 import MovieCard from './components/MovieCard.jsx';
+import SeriesCard from './components/SeriesCard.jsx';
 import AddMovie from './components/AddMovie.jsx';
 import Filters from './components/Filters.jsx';
 import Stats from './components/Stats.jsx';
@@ -59,6 +60,12 @@ const App = () => {
   const [genres, setGenres] = useState([]);
   const [selectedGenre, setSelectedGenre] = useState(null);
 
+  // Series state (Phase 3)
+  const [viewMode, setViewMode] = useState('movies'); // 'movies' or 'series'
+  const [series, setSeries] = useState([]);
+  const [allSeries, setAllSeries] = useState([]);
+  const [totalSeries, setTotalSeries] = useState(0);
+
   /**
    * useEffect se ejecuta cuando el componente se monta o cuando cambian las dependencias
    */
@@ -66,26 +73,84 @@ const App = () => {
     loadInitialData();
   }, []);
 
-  // Recargar películas cuando cambia la página o el filtro
+  // Recargar películas/series cuando cambia la página, el filtro o el modo de vista
   useEffect(() => {
     if (statuses.length > 0) {
-      loadMovies();
-      loadAllMovies();
+      if (viewMode === 'movies') {
+        loadMovies();
+        loadAllMovies();
+      } else {
+        loadSeries();
+        loadAllSeries();
+      }
     }
-  }, [currentPage, filterStatus]);
+  }, [currentPage, filterStatus, viewMode]);
 
   /**
-   * Cargar datos iniciales (estados, géneros y películas)
+   * Cargar series desde Supabase con paginación
+   */
+  const loadSeries = async () => {
+    try {
+      setLoading(true);
+      
+      const statusId = filterStatus === 'all' ? null : parseInt(filterStatus);
+      const data = await seriesApi.getAll(currentPage, pageSize, statusId);
+      
+      setSeries(data || []);
+      
+      // Obtener el total real de series
+      await loadSeriesTotalCount(statusId);
+    } catch (error) {
+      console.error('Error loading series:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Cargar TODAS las series sin paginación (para búsqueda y stats)
+   */
+  const loadAllSeries = async () => {
+    try {
+      const statusId = filterStatus === 'all' ? null : parseInt(filterStatus);
+      
+      // Cargar todas sin paginación
+      const data = await seriesApi.getAll(0, 10000, statusId);
+      setAllSeries(data || []);
+    } catch (error) {
+      console.error('Error loading all series:', error);
+    }
+  };
+
+  /**
+   * Obtener total de series (para calcular páginas)
+   */
+  const loadSeriesTotalCount = async (statusId = null) => {
+    try {
+      const data = await seriesApi.count(statusId);
+      const count = data[0].count;
+      setTotalSeries(count);
+    } catch (error) {
+      console.error('Error loading total series count:', error);
+    }
+  };
+
+  /**
+   * Cargar datos iniciales (estados, géneros y películas/series)
    */
   const loadInitialData = async () => {
     try {
       setLoading(true);
       await loadStatuses();
       await loadGenres();
-      await loadMovies();
       
-      // Cargar todas las películas en background
-      loadAllMovies();
+      if (viewMode === 'movies') {
+        await loadMovies();
+        loadAllMovies();
+      } else {
+        await loadSeries();
+        loadAllSeries();
+      }
     } catch (error) {
       console.error('Error loading initial data:', error);
       alert('Error loading data. Check the console.');
@@ -474,6 +539,228 @@ const App = () => {
   };
 
   /**
+   * Añadir una nueva serie - versión INTERNA (sin verificación de auth)
+   */
+  const _addSeries = async (title) => {
+    try {
+      const pendingStatus = statuses.find((s) => s.description === 'Pendiente');
+      
+      // Crear serie temporal con ID negativo
+      const tempId = -Date.now();
+      const tempSeries = {
+        id: tempId,
+        title: title,
+        year: null,
+        poster_path: null,
+        genres: null,
+        total_seasons: null,
+        current_season: 1,
+        status_id: pendingStatus?.id || 1,
+        created_at: new Date().toISOString(),
+      };
+      
+      // Añadir al instante a la UI
+      setAllSeries((prev) => [tempSeries, ...prev]);
+      
+      // Buscar en TMDB en background
+      let tmdbData = {};
+      try {
+        tmdbData = await tmdbApi.searchSeries(title);
+      } catch (tmdbError) {
+        console.warn('TMDB search failed for series:', tmdbError);
+      }
+      
+      // Actualizar la serie temporal con datos de TMDB
+      setAllSeries((prev) =>
+        prev.map((s) =>
+          s.id === tempId
+            ? {
+                ...s,
+                year: tmdbData?.year || null,
+                poster_path: tmdbData?.poster_path || null,
+                genres: tmdbData?.genres ? JSON.stringify(tmdbData.genres) : null,
+                total_seasons: tmdbData?.total_seasons || null,
+              }
+            : s
+        )
+      );
+      
+      // Crear en la BD con todos los datos
+      const createdSeries = await seriesApi.create({
+        title: title,
+        year: tmdbData?.year || null,
+        poster_path: tmdbData?.poster_path || null,
+        genres: tmdbData?.genres ? JSON.stringify(tmdbData.genres) : null,
+        total_seasons: tmdbData?.total_seasons || null,
+        current_season: 1,
+        status_id: pendingStatus?.id || 1,
+        user_token: user.token || '',
+      }, user.token);
+      
+      // Reemplazar serie temporal con la real
+      setAllSeries((prev) =>
+        prev.map((s) => (s.id === tempId ? createdSeries : s))
+      );
+      
+      // Resetear página y búsqueda
+      setCurrentPage(0);
+      setSearchTerm('');
+      
+      // Refresco de sincronización
+      setTimeout(() => {
+        loadAllSeries();
+      }, 500);
+    } catch (error) {
+      console.error('Error adding series:', error);
+      alert('Error adding series');
+    }
+  };
+
+  /**
+   * Añadir serie - versión PÚBLICA (con verificación de auth)
+   */
+  const handleAddSeries = async (title) => {
+    if (!requireAuth(() => _addSeries(title))) return;
+    await _addSeries(title);
+  };
+
+  /**
+   * Actualizar serie - versión INTERNA
+   */
+  const _updateSeries = async (seriesId, updates) => {
+    const oldAllSeries = allSeries;
+    const oldSeries = series;
+    
+    try {
+      // Actualizar inmediatamente
+      setAllSeries((prev) =>
+        prev.map((s) =>
+          s.id === seriesId ? { ...s, ...updates } : s
+        )
+      );
+      
+      setSeries((prev) =>
+        prev.map((s) =>
+          s.id === seriesId ? { ...s, ...updates } : s
+        )
+      );
+      
+      // Hacer la petición en background
+      seriesApi.update(seriesId, updates, user.token)
+        .catch((error) => {
+          console.error('Error updating series:', error);
+          setAllSeries(oldAllSeries);
+          setSeries(oldSeries);
+        });
+    } catch (error) {
+      console.error('Error updating series:', error);
+    }
+  };
+
+  /**
+   * Eliminar serie - versión INTERNA
+   */
+  const _deleteSeries = async (seriesId) => {
+    if (!confirm('Delete this series?')) return;
+
+    const oldAllSeries = allSeries;
+    const oldSeries = series;
+
+    try {
+      setAllSeries((prev) => prev.filter((s) => s.id !== seriesId));
+      setSeries((prev) => prev.filter((s) => s.id !== seriesId));
+      
+      seriesApi.delete(seriesId, user.token)
+        .catch((error) => {
+          console.error('Error deleting series:', error);
+          setAllSeries(oldAllSeries);
+          setSeries(oldSeries);
+          alert('Error deleting series. Change reverted.');
+        });
+    } catch (error) {
+      console.error('Error deleting series:', error);
+      alert('Error deleting series');
+    }
+  };
+
+  /**
+   * Cambiar estado de serie - versión INTERNA
+   */
+  const _changeSeriesStatus = async (seriesId, newStatusId) => {
+    const oldAllSeries = allSeries;
+    const oldSeries = series;
+    
+    try {
+      setAllSeries((prev) =>
+        prev.map((s) =>
+          s.id === seriesId ? { ...s, status_id: newStatusId } : s
+        )
+      );
+      
+      setSeries((prev) =>
+        prev.map((s) =>
+          s.id === seriesId ? { ...s, status_id: newStatusId } : s
+        )
+      );
+      
+      seriesApi.update(seriesId, { status_id: newStatusId }, user.token)
+        .catch((error) => {
+          console.error('Error updating series status:', error);
+          setAllSeries(oldAllSeries);
+          setSeries(oldSeries);
+        });
+    } catch (error) {
+      console.error('Error updating series status:', error);
+    }
+  };
+
+  const handleSeriesStatusChange = async (seriesId, newStatusId) => {
+    if (!requireAuth(() => _changeSeriesStatus(seriesId, newStatusId))) return;
+    await _changeSeriesStatus(seriesId, newStatusId);
+  };
+
+  const handleSeriesDelete = async (seriesId) => {
+    if (!requireAuth(() => _deleteSeries(seriesId))) return;
+    await _deleteSeries(seriesId);
+  };
+
+  const handleSeriesUpdate = async (seriesId, updates) => {
+    if (!requireAuth(() => _updateSeries(seriesId, updates))) return;
+    await _updateSeries(seriesId, updates);
+  };
+
+  /**
+   * Filtrar series según búsqueda, rating y género
+   */
+  const searchedSeries = allSeries.filter((serie) => {
+    const title = serie.title || '';
+    const year = serie.year;
+    const searchLower = searchTerm.toLowerCase().trim();
+    
+    const matchesTitle = title
+      .toLowerCase()
+      .includes(searchLower);
+    
+    const matchesYear = searchLower && /^\d+$/.test(searchLower) && 
+      year && 
+      year.toString() === searchLower;
+    
+    const matchesRating = !minRating || (serie.rating && serie.rating >= minRating);
+    
+    let matchesGenre = true;
+    if (selectedGenre) {
+      try {
+        const serieGenres = serie.genres ? JSON.parse(serie.genres) : [];
+        matchesGenre = serieGenres.includes(selectedGenre);
+      } catch (e) {
+        matchesGenre = false;
+      }
+    }
+    
+    return (matchesTitle || matchesYear) && matchesRating && matchesGenre;
+  });
+
+  /**
    * Filtrar películas según búsqueda, rating y género
    * Busca por título, año o director
    * Aplica paginación después de filtrar
@@ -517,11 +804,22 @@ const App = () => {
     return (matchesTitle || matchesYear || matchesDirector) && matchesRating && matchesGenre;
   });
 
-  // Aplicar paginación al resultado de búsqueda
+  // Calcular paginación ANTES de usarla
   const from = currentPage * pageSize;
   const to = from + pageSize;
+
+  // Aplicar paginación al resultado de búsqueda de movies
   const filteredMovies = searchedMovies.slice(from, to);
   const searchTotalPages = Math.ceil(searchedMovies.length / pageSize);
+
+  // Aplicar paginación al resultado de búsqueda de series
+  const filteredSeries = searchedSeries.slice(from, to);
+  const searchSeriesTotalPages = Math.ceil(searchedSeries.length / pageSize);
+
+  // Determinar qué mostrar según el modo de vista
+  const displayList = viewMode === 'movies' ? filteredMovies : filteredSeries;
+  const displayTotal = viewMode === 'movies' ? searchTotalPages : searchSeriesTotalPages;
+  const displayMovies = viewMode === 'movies';
 
   const handlePrevPage = () => {
     if (currentPage > 0) {
@@ -530,7 +828,8 @@ const App = () => {
   };
 
   const handleNextPage = () => {
-    if (currentPage < searchTotalPages - 1) {
+    const maxPage = viewMode === 'movies' ? searchTotalPages : searchSeriesTotalPages;
+    if (currentPage < maxPage - 1) {
       setCurrentPage(currentPage + 1);
     }
   };
@@ -546,33 +845,68 @@ const App = () => {
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-          <button
-            onClick={() => {
-              // Reset everything to initial state
-              setSearchTerm('');
-              setCurrentPage(0);
-              setFilterStatus('all');
-              setMinRating(0);
-              setSelectedGenre(null);
-              setShowAddMovieModal(false);
-            }}
-            className="flex items-center gap-3 hover:opacity-80 transition cursor-pointer group"
-            title="Click to reset filters"
-          >
-            <Film className="w-10 h-10 text-purple-400 group-hover:scale-110 transition" />
-            <h1 className="text-3xl sm:text-4xl font-bold text-white">WatchLog</h1>
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                // Reset everything to initial state
+                setSearchTerm('');
+                setCurrentPage(0);
+                setFilterStatus('all');
+                setMinRating(0);
+                setSelectedGenre(null);
+                setShowAddMovieModal(false);
+              }}
+              className="flex items-center gap-3 hover:opacity-80 transition cursor-pointer group"
+              title="Click to reset filters"
+            >
+              <Film className="w-10 h-10 text-purple-400 group-hover:scale-110 transition" />
+              <h1 className="text-3xl sm:text-4xl font-bold text-white">WatchLog</h1>
+            </button>
+
+            {/* View Mode Toggle */}
+            <div className="ml-8 flex gap-2">
+              <button
+                onClick={() => {
+                  setViewMode('movies');
+                  setCurrentPage(0);
+                }}
+                className={`px-3 py-2 rounded text-sm font-semibold flex items-center gap-1 transition ${
+                  viewMode === 'movies'
+                    ? 'bg-purple-500 text-white'
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                }`}
+              >
+                <Film size={16} /> Movies
+              </button>
+              <button
+                onClick={() => {
+                  setViewMode('series');
+                  setCurrentPage(0);
+                }}
+                className={`px-3 py-2 rounded text-sm font-semibold flex items-center gap-1 transition ${
+                  viewMode === 'series'
+                    ? 'bg-purple-500 text-white'
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                }`}
+              >
+                <Tv size={16} /> Series
+              </button>
+            </div>
+          </div>
           <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             <button
               onClick={() => {
-                if (!user) {
-                  setPendingAction(() => () => fillMissingTMDBData(allMovies));
-                  setShowLoginModal(true);
-                } else {
-                  fillMissingTMDBData(allMovies);
+                if (viewMode === 'movies') {
+                  if (!user) {
+                    setPendingAction(() => () => fillMissingTMDBData(allMovies));
+                    setShowLoginModal(true);
+                  } else {
+                    fillMissingTMDBData(allMovies);
+                  }
                 }
               }}
-              className={`${BUTTON_STYLES.primary_sm} flex-1 sm:flex-none text-sm`}
+              disabled={viewMode === 'series'}
+              className={`${BUTTON_STYLES.primary_sm} flex-1 sm:flex-none text-sm ${viewMode === 'series' ? 'opacity-50 cursor-not-allowed' : ''}`}
               title="Completa poster, año, director y géneros desde TMDB"
             >
               🔍 Complete TMDB
@@ -580,7 +914,7 @@ const App = () => {
             <button
               onClick={() => setShowExportModal(true)}
               className={`${BUTTON_STYLES.primary_sm} flex-1 sm:flex-none text-sm`}
-              title="Exporta tu librería"
+              title={`Exporta tu ${viewMode === 'movies' ? 'librería de películas' : 'librería de series'}`}
             >
               💾 Export
             </button>
@@ -595,7 +929,7 @@ const App = () => {
               }}
               className={`${BUTTON_STYLES.primary_sm} flex-1 sm:flex-none text-sm`}
             >
-              ➕ Add Movie
+              ➕ Add {viewMode === 'movies' ? 'Movie' : 'Series'}
             </button>
             {user && (
               <button
@@ -633,8 +967,8 @@ const App = () => {
         {/* Estadísticas */}
         <div className="mb-6">
           <Stats 
-            movies={allMovies} 
-            statuses={statuses}
+            movies={viewMode === 'movies' ? allMovies : allSeries} 
+            statuses={viewMode === 'movies' ? statuses.filter(s => s.description !== 'Watching') : statuses}
             filterStatus={filterStatus}
             onFilterChange={handleFilterChange}
           />
@@ -647,26 +981,39 @@ const App = () => {
           </div>
         )}
 
-        {/* Lista de películas */}
+        {/* Lista de películas/series */}
         {loading ? (
-          <div className="text-center text-white py-12">Loading movies...</div>
-        ) : filteredMovies.length === 0 ? (
+          <div className="text-center text-white py-12">Loading {viewMode === 'movies' ? 'movies' : 'series'}...</div>
+        ) : displayList.length === 0 ? (
           <div className="text-center text-slate-400 py-12">
-            No movies to show
+            No {viewMode === 'movies' ? 'movies' : 'series'} to show
           </div>
         ) : (
           <>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {filteredMovies.map((movie) => (
-                <MovieCard
-                  key={movie.id}
-                  movie={movie}
-                  statuses={statuses}
-                  onStatusChange={handleStatusChange}
-                  onDelete={handleDelete}
-                  onRatingChange={handleRatingChange}
-                  user={user}
-                />
+              {displayList.map((item) => (
+                <div key={item.id}>
+                  {viewMode === 'movies' ? (
+                    <MovieCard
+                      movie={item}
+                      statuses={statuses.filter(s => s.description !== 'Watching')}
+                      onStatusChange={handleStatusChange}
+                      onDelete={handleDelete}
+                      onRatingChange={handleRatingChange}
+                      user={user}
+                    />
+                  ) : (
+                    <SeriesCard
+                      series={item}
+                      statuses={statuses}
+                      onStatusChange={handleSeriesStatusChange}
+                      onDelete={handleSeriesDelete}
+                      onUpdate={handleSeriesUpdate}
+                      onRatingChange={handleRatingChange}
+                      user={user}
+                    />
+                  )}
+                </div>
               ))}
             </div>
 
@@ -681,12 +1028,12 @@ const App = () => {
               </button>
               
               <span className="text-white">
-                Page {currentPage + 1} of {searchTotalPages || 1}
+                Page {currentPage + 1} of {displayTotal || 1}
               </span>
               
               <button
                 onClick={handleNextPage}
-                disabled={currentPage >= searchTotalPages - 1}
+                disabled={currentPage >= displayTotal - 1}
                 className={BUTTON_STYLES.secondary_lg}
               >
                 Next →
@@ -738,19 +1085,31 @@ const App = () => {
         </div>
       )}
 
-      {/* Add Movie Modal */}
+      {/* Add Movie/Series Modal */}
       {showAddMovieModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-slate-800 rounded-lg p-8 w-full max-w-md">
-            <h2 className="text-white text-xl font-semibold mb-6">Add New Movie</h2>
+            <h2 className="text-white text-xl font-semibold mb-6">
+              Add New {viewMode === 'movies' ? 'Movie' : 'Series'}
+            </h2>
             
             <div className="mb-4">
-              <AddMovie 
-                onAdd={(title) => {
-                  handleAddMovie(title);
-                  setShowAddMovieModal(false);
-                }}
-              />
+              {viewMode === 'movies' ? (
+                <AddMovie 
+                  onAdd={(title) => {
+                    handleAddMovie(title);
+                    setShowAddMovieModal(false);
+                  }}
+                />
+              ) : (
+                <AddMovie 
+                  onAdd={(title) => {
+                    handleAddSeries(title);
+                    setShowAddMovieModal(false);
+                  }}
+                  placeholder="Series title..."
+                />
+              )}
             </div>
             
             <button
@@ -766,7 +1125,7 @@ const App = () => {
       {/* Export Modal */}
       {showExportModal && (
         <Export 
-          movies={allMovies}
+          movies={viewMode === 'movies' ? allMovies : allSeries}
           onClose={() => setShowExportModal(false)}
         />
       )}

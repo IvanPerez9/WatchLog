@@ -22,8 +22,13 @@ const Stats = ({ movies, statuses, filterStatus = 'all', onFilterChange }) => {
     }
   };
 
+  // Determinar columnas dinámicamente basado en la cantidad de estados
+  const gridColsClass = statuses.length === 4 
+    ? 'grid-cols-2 md:grid-cols-4' 
+    : 'grid-cols-1 md:grid-cols-3';
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className={`grid ${gridColsClass} gap-4`}>
       {statuses.map((status) => {
         const count = movies.filter((m) => m.status_id === status.id).length;
         const isSelected = filterStatus === status.id;

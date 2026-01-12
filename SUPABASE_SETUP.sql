@@ -34,22 +34,42 @@ CREATE TABLE IF NOT EXISTS movies (
   director VARCHAR(255),
   genres TEXT,
   status_id INTEGER NOT NULL REFERENCES statuses(id),
-  user_token VARCHAR(255) NOT NULL REFERENCES valid_tokens(token),
   rating DECIMAL(2,1) DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT rating_check CHECK (rating IS NULL OR (rating >= 0.5 AND rating <= 5 AND rating * 10 % 5 = 0))
 );
 
+-- Series table
+CREATE TABLE IF NOT EXISTS series (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  year INTEGER,
+  poster_path VARCHAR(500),
+  genres TEXT,
+  total_seasons INTEGER,
+  current_season INTEGER DEFAULT 1,
+  status_id INTEGER NOT NULL REFERENCES statuses(id),
+  rating DECIMAL(2,1) DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT rating_check_series CHECK (rating IS NULL OR (rating >= 0.5 AND rating <= 5 AND rating * 10 % 5 = 0))
+);
+
 -- ============================================
 -- 2. INSERT DEFAULT STATUSES
 -- ============================================
 
+-- Statuses for Movies (3 states)
 INSERT INTO statuses (description) VALUES
-  ('Pendiente'),
-  ('Viendo'),
-  ('Vista'),
-  ('Favorita')
+  ('Pending'),
+  ('Watched'),
+  ('Favorite')
+ON CONFLICT (description) DO NOTHING;
+
+-- Statuses for Series (4 states - includes Watching)
+INSERT INTO statuses (description) VALUES
+  ('Watching')
 ON CONFLICT (description) DO NOTHING;
 
 -- ============================================
@@ -78,7 +98,26 @@ CREATE INDEX IF NOT EXISTS idx_movies_rating ON movies(rating DESC);
 CREATE INDEX IF NOT EXISTS idx_movies_director ON movies(director);
 
 -- Index for genre searches (using GiST for text search)
-CREATE INDEX IF NOT EXISTS idx_movies_genres ON movies USING GiST(genres gist_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_movies_genres ON movies(genres);
+
+-- SERIES INDEXES
+-- Index for faster series searches by title
+CREATE INDEX IF NOT EXISTS idx_series_title ON series(title);
+
+-- Index for faster series searches by year
+CREATE INDEX IF NOT EXISTS idx_series_year ON series(year);
+
+-- Index for faster filtering by status (series)
+CREATE INDEX IF NOT EXISTS idx_series_status_id ON series(status_id);
+
+-- Index for user series (by token)
+CREATE INDEX IF NOT EXISTS idx_series_user_token ON series(user_token);
+
+-- Index for rating (series)
+CREATE INDEX IF NOT EXISTS idx_series_rating ON series(rating DESC);
+
+-- Index for director searches (series)
+CREATE INDEX IF NOT EXISTS idx_series_genres ON series(genres);
 
 -- ============================================
 -- 4. ENABLE ROW LEVEL SECURITY (RLS)
@@ -127,6 +166,35 @@ CREATE POLICY "Allow delete with valid token"
   ON movies FOR DELETE
   USING (check_auth_token());
 
+-- SERIES RLS POLICIES
+-- Enable RLS on series table
+ALTER TABLE series ENABLE ROW LEVEL SECURITY;
+
+-- SELECT: Allow public read (no token required)
+DROP POLICY IF EXISTS "Allow public read access" ON series;
+CREATE POLICY "Allow public read access"
+  ON series FOR SELECT
+  USING (TRUE);
+
+-- INSERT: Require valid token
+DROP POLICY IF EXISTS "Allow insert with valid token" ON series;
+CREATE POLICY "Allow insert with valid token"
+  ON series FOR INSERT
+  WITH CHECK (check_auth_token());
+
+-- UPDATE: Require valid token
+DROP POLICY IF EXISTS "Allow update with valid token" ON series;
+CREATE POLICY "Allow update with valid token"
+  ON series FOR UPDATE
+  USING (check_auth_token())
+  WITH CHECK (check_auth_token());
+
+-- DELETE: Require valid token
+DROP POLICY IF EXISTS "Allow delete with valid token" ON series;
+CREATE POLICY "Allow delete with valid token"
+  ON series FOR DELETE
+  USING (check_auth_token());
+
 -- ============================================
 -- 5. AUTO-UPDATE TIMESTAMP
 -- ============================================
@@ -144,6 +212,13 @@ $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS update_movies_updated_at ON movies;
 CREATE TRIGGER update_movies_updated_at
   BEFORE UPDATE ON movies
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- Create trigger to auto-update timestamp for series
+DROP TRIGGER IF EXISTS update_series_updated_at ON series;
+CREATE TRIGGER update_series_updated_at
+  BEFORE UPDATE ON series
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
@@ -183,11 +258,20 @@ ON CONFLICT (token) DO NOTHING;
 -- RIGHT JOIN statuses s ON m.status_id = s.id 
 -- GROUP BY s.id, s.description;
 
+-- View series count by status
+-- SELECT s.description, COUNT(ser.id) as count 
+-- FROM series ser 
+-- RIGHT JOIN statuses s ON ser.status_id = s.id 
+-- GROUP BY s.id, s.description;
+
 -- Mark a token as inactive (revoke access)
 -- UPDATE valid_tokens SET active = false WHERE token = 'token-to-revoke';
 
 -- Delete all movies (be careful!)
 -- DELETE FROM movies;
+
+-- Delete all series (be careful!)
+-- DELETE FROM series;
 
 -- ============================================
 -- MIGRATIONS (IF ADDING NEW COLUMNS TO EXISTING DB)
@@ -196,6 +280,17 @@ ON CONFLICT (token) DO NOTHING;
 
 -- ALTER TABLE movies ADD COLUMN IF NOT EXISTS director VARCHAR(255);
 -- ALTER TABLE movies ADD COLUMN IF NOT EXISTS genres TEXT;
+
+-- ============================================
+-- MIGRATIONS (IF ADDING SERIES TABLE TO EXISTING DB - PHASE 3)
+-- ============================================
+-- Run these if you already have an existing database and want to add series support:
+
+-- Create series table (copy from section 1 above)
+-- ALTER TABLE series ENABLE ROW LEVEL SECURITY;
+-- Create all series indexes (copy from section 3 above)
+-- Create all series RLS policies (copy from section 4 above)
+-- Create trigger for auto-timestamp (copy from section 5 above)
 
 -- ============================================
 -- SECURITY CHECKLIST

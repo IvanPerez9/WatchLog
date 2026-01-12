@@ -64,29 +64,38 @@ export const tmdbApi = {
   },
 
   /**
-   * Encontrar el resultado más similar en una lista de películas
+   * Encontrar el resultado más similar en una lista de películas/series
    */
   findBestMatch: (searchTitle, results) => {
     if (!results || results.length === 0) return null;
     
     let bestMatch = results[0];
-    let highestSimilarity = tmdbApi.calculateSimilarity(searchTitle, results[0].title);
+    // Para series usa 'name', para películas usa 'title'
+    const firstTitle = results[0].title || results[0].name;
+    const firstOriginal = results[0].original_title || results[0].original_name;
     
-    // Comparar con original_title también
-    let originalSimilarity = tmdbApi.calculateSimilarity(searchTitle, results[0].original_title);
-    if (originalSimilarity > highestSimilarity) {
-      highestSimilarity = originalSimilarity;
+    let highestSimilarity = firstTitle ? tmdbApi.calculateSimilarity(searchTitle, firstTitle) : 0;
+    
+    // Comparar con original_title/original_name también
+    if (firstOriginal) {
+      let originalSimilarity = tmdbApi.calculateSimilarity(searchTitle, firstOriginal);
+      if (originalSimilarity > highestSimilarity) {
+        highestSimilarity = originalSimilarity;
+      }
     }
     
     for (let i = 1; i < results.length; i++) {
-      const movie = results[i];
-      const titleSimilarity = tmdbApi.calculateSimilarity(searchTitle, movie.title);
-      const originalSimilarity = tmdbApi.calculateSimilarity(searchTitle, movie.original_title);
+      const item = results[i];
+      const itemTitle = item.title || item.name;
+      const itemOriginal = item.original_title || item.original_name;
+      
+      let titleSimilarity = itemTitle ? tmdbApi.calculateSimilarity(searchTitle, itemTitle) : 0;
+      let originalSimilarity = itemOriginal ? tmdbApi.calculateSimilarity(searchTitle, itemOriginal) : 0;
       const maxSimilarity = Math.max(titleSimilarity, originalSimilarity);
       
       if (maxSimilarity > highestSimilarity) {
         highestSimilarity = maxSimilarity;
-        bestMatch = movie;
+        bestMatch = item;
       }
     }
     
@@ -251,5 +260,95 @@ export const tmdbApi = {
    */
   getPosterUrl: (posterPath) => {
     return posterPath ? `${config.tmdb.imageBaseUrl}${posterPath}` : null;
+  },
+
+  /**
+   * Obtener detalles completos de una serie (años, géneros, temporadas, etc)
+   * GET /tv/{id}
+   * 
+   * @param {number} seriesId - ID de la serie en TMDB
+   * @returns {Promise<Object|null>} - Detalles de la serie o null
+   */
+  getSeriesDetails: async (seriesId) => {
+    try {
+      const response = await fetch(
+        `${config.tmdb.baseUrl}/tv/${seriesId}?api_key=${config.tmdb.apiKey}&language=en-US`
+      );
+
+      if (!response.ok) {
+        console.error('TMDB API error getting series details:', response.statusText);
+        return null;
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching series details:', error);
+      return null;
+    }
+  },
+
+  /**
+   * Buscar una serie por título y obtener todos sus datos
+   * GET /search/tv?query={title} + /tv/{id}
+   * 
+   * @param {string} title - Título de la serie
+   * @returns {Promise<Object|null>} - {year, poster_path, genres, total_seasons, tmdb_id} o null si no se encuentra
+   */
+  searchSeries: async (title) => {
+    try {
+      // 1. Buscar serie por título
+      const searchResponse = await fetch(
+        `${config.tmdb.baseUrl}/search/tv?api_key=${config.tmdb.apiKey}&query=${encodeURIComponent(title)}&language=en-US`
+      );
+
+      if (!searchResponse.ok) {
+        console.error('TMDB API error:', searchResponse.statusText);
+        return null;
+      }
+
+      const searchData = await searchResponse.json();
+
+      // Si no encontramos resultados, retornar null
+      if (!searchData.results || searchData.results.length === 0) {
+        return null;
+      }
+
+      // Encontrar el resultado más similar al título buscado
+      const seriesBasic = tmdbApi.findBestMatch(title, searchData.results);
+      if (!seriesBasic) {
+        return null;
+      }
+      
+      const seriesId = seriesBasic.id;
+
+      // 2. Obtener detalles completos (incluyendo géneros y número de temporadas)
+      const details = await tmdbApi.getSeriesDetails(seriesId);
+      if (!details) {
+        return null;
+      }
+
+      // Extraer géneros
+      const genres = details.genres
+        ? details.genres.map((g) => g.name)
+        : [];
+
+      // Construir URL completa del poster si existe
+      const posterPath = details.poster_path 
+        ? `https://image.tmdb.org/t/p/w500${details.poster_path}` 
+        : null;
+
+      return {
+        year: details.first_air_date ? new Date(details.first_air_date).getFullYear() : null,
+        poster_path: posterPath,
+        tmdb_id: seriesId,
+        overview: details.overview || null,
+        genres: genres, // Array de strings: ["Drama", "Crime", ...]
+        total_seasons: details.number_of_seasons || null,
+      };
+    } catch (error) {
+      console.error('Error searching TMDB series:', error);
+      return null;
+    }
   },
 };
