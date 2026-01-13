@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Star, Trash2, Edit2, Check, X, ChevronDown } from 'lucide-react';
+import { getRatingText } from '../utils/ratingUtils.js';
+import { StarRating } from './StarRating.jsx';
 
 /**
  * SeriesCard Component - Display card for TV series
@@ -67,40 +69,6 @@ export const SeriesCard = ({ series, statuses, onDelete, onUpdate, onStatusChang
     setHoverRating(hoverValue);
   };
 
-  const renderStars = () => {
-    const rating = hoverRating || series.rating || 0;
-    
-    return [1, 2, 3, 4, 5].map((starNumber) => (
-      <button
-        key={starNumber}
-        onClick={(e) => handleStarClick(starNumber, e)}
-        onMouseMove={(e) => handleStarHover(starNumber, e)}
-        onMouseLeave={() => setHoverRating(0)}
-        className={`transition transform ${
-          series.status_id !== 1 ? 'hover:scale-110 cursor-pointer' : 'cursor-not-allowed opacity-50'
-        }`}
-        disabled={series.status_id === 1}
-        title={
-          series.status_id === 1 
-            ? 'Rate when you change the status'
-            : 'Left click for ½ star'
-        }
-      >
-        <div className="relative w-4 h-4">
-          <Star className="absolute w-4 h-4 text-slate-600" />
-          
-          {starNumber <= rating ? (
-            <Star className="absolute w-4 h-4 fill-yellow-400 text-yellow-400" />
-          ) : starNumber - 0.5 === rating ? (
-            <div className="absolute top-0 left-0 w-2 h-4 overflow-hidden">
-              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-            </div>
-          ) : null}
-        </div>
-      </button>
-    ));
-  };
-
   const progressPercentage = series.total_seasons 
     ? (editedData.current_season / series.total_seasons) * 100 
     : 0;
@@ -147,29 +115,20 @@ export const SeriesCard = ({ series, statuses, onDelete, onUpdate, onStatusChang
         <h3 className="text-white font-semibold text-sm mb-1 truncate" title={series.title}>{series.title}</h3>
         <p className="text-xs text-slate-400 mb-2">{series.year || 'N/A'}</p>
 
-        {/* Genres */}
-        {genres.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-2">
-            {genres.slice(0, 2).map((genre, idx) => (
-              <span 
-                key={idx}
-                className="text-xs bg-slate-700 text-slate-300 px-2 py-1 rounded"
-              >
-                {genre}
-              </span>
-            ))}
-            {genres.length > 2 && (
-              <span className="text-xs text-slate-400 self-center">+{genres.length - 2}</span>
-            )}
-          </div>
-        )}
-
         {/* Rating Stars - Interactive */}
-        <div className="flex items-center gap-1 mb-2">
-          <div className="flex gap-0.5">
-            {renderStars()}
-          </div>
-          <span className="text-xs text-slate-400">{series.rating ? series.rating.toFixed(1) : '-'}</span>
+        <div className="mb-2">
+          <StarRating
+            rating={series.rating || 0}
+            hoverRating={hoverRating}
+            statusId={series.status_id}
+            onStarClick={handleStarClick}
+            onStarHover={handleStarHover}
+            onMouseLeave={() => setHoverRating(0)}
+            showText={series.rating > 0}
+          />
+          {!series.rating && (
+            <span className="text-xs text-slate-400">-</span>
+          )}
         </div>
 
         {/* Progress Bar - Seasons Watched */}

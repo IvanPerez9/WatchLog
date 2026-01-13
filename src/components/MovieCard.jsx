@@ -13,6 +13,8 @@
 import React from 'react';
 import { Film, Trash2, Star } from 'lucide-react';
 import { tmdbApi } from '../api/tmdb.js';
+import { getRatingText } from '../utils/ratingUtils.js';
+import { StarRating } from './StarRating.jsx';
 
 const MovieCard = ({ movie, statuses, onStatusChange, onDelete, onRatingChange, user }) => {
   const posterUrl = tmdbApi.getPosterUrl(movie.poster_path);
@@ -56,22 +58,7 @@ const MovieCard = ({ movie, statuses, onStatusChange, onDelete, onRatingChange, 
     setHoverRating(hoverValue);
   };
 
-  const getRatingText = (ratingValue) => {
-    const texts = {
-      0.5: '½ - Terrible',
-      1: '1 - Very Bad',
-      1.5: '1.5 - Bad',
-      2: '2 - Poor',
-      2.5: '2.5 - Fair',
-      3: '3 - Good',
-      3.5: '3.5 - Very Good',
-      4: '4 - Excellent',
-      4.5: '4.5 - Almost Perfect',
-      5: '5 - Perfect ✨',
-    };
-    return texts[ratingValue] || '';
-  };
-
+  // Renderizar estrellas (completas, media, vacías)
   // Renderizar estrellas (completas, media, vacías)
   const renderStars = (fillAmount) => {
     const stars = [];
@@ -158,44 +145,17 @@ const MovieCard = ({ movie, statuses, onStatusChange, onDelete, onRatingChange, 
 
         {/* Rating with stars */}
         <div className="mb-2 pb-2 border-b border-slate-700">
-          <div className="flex gap-0.5 mb-1">
-            {[1, 2, 3, 4, 5].map((starNumber) => (
-              <button
-                key={starNumber}
-                onClick={(e) => handleStarClick(starNumber, e)}
-                onMouseMove={(e) => handleStarHover(starNumber, e)}
-                onMouseLeave={() => setHoverRating(0)}
-                className={`transition transform ${
-                  movie.status_id !== 1 ? 'hover:scale-110 cursor-pointer' : 'cursor-not-allowed opacity-50'
-                }`}
-                disabled={movie.status_id === 1}
-                title={
-                  movie.status_id === 1 
-                    ? 'Rate when you change the status'
-                    : 'Left click for ½ star'
-                }
-              >
-                <div className="relative w-4 h-4">
-                  <Star className="absolute w-4 h-4 text-slate-600" />
-                  
-                  {starNumber <= (hoverRating || rating) ? (
-                    <Star className="absolute w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  ) : starNumber - 0.5 === (hoverRating || rating) ? (
-                    <div className="absolute top-0 left-0 w-2 h-4 overflow-hidden">
-                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    </div>
-                  ) : null}
-                </div>
-              </button>
-            ))}
-          </div>
-          {rating > 0 && (
-            <p className="text-yellow-400 text-xs font-medium">
-              {rating}/5 - {getRatingText(rating)}
-            </p>
-          )}
+          <StarRating
+            rating={rating}
+            hoverRating={hoverRating}
+            statusId={movie.status_id}
+            onStarClick={handleStarClick}
+            onStarHover={handleStarHover}
+            onMouseLeave={() => setHoverRating(0)}
+            showText={true}
+          />
           {movie.status_id === 1 && (
-            <p className="text-slate-400 text-xs italic">
+            <p className="text-slate-400 text-xs italic mt-1">
               Rate when you watch it
             </p>
           )}
