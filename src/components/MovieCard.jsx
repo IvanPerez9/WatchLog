@@ -14,7 +14,7 @@ import React from 'react';
 import { Film, Trash2, Star } from 'lucide-react';
 import { tmdbApi } from '../api/tmdb.js';
 import { getRatingText } from '../utils/ratingUtils.js';
-import { StarRating } from './StarRating.jsx';
+import { StarRating } from './common/StarRating.jsx';
 
 const MovieCard = ({ movie, statuses, onStatusChange, onDelete, onRatingChange, user }) => {
   const posterUrl = tmdbApi.getPosterUrl(movie.poster_path);

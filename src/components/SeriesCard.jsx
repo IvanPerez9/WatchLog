@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Star, Trash2, Edit2, Check, X, ChevronDown } from 'lucide-react';
 import { getRatingText } from '../utils/ratingUtils.js';
-import { StarRating } from './StarRating.jsx';
+import { StarRating } from './common/StarRating.jsx';
 
 /**
  * SeriesCard Component - Display card for TV series
