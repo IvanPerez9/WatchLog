@@ -29,8 +29,12 @@ const App = () => {
   const [statuses, setStatuses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [minRating, setMinRating] = useState(0);
+  const [filterStatus, setFilterStatus] = useState(() => {
+    return localStorage.getItem('watchlog_filterStatus') || 'all';
+  });
+  const [minRating, setMinRating] = useState(() => {
+    return parseInt(localStorage.getItem('watchlog_minRating') || '0');
+  });
   
   // Pagination state
   const [currentPage, setCurrentPageInternal] = useState(pageFromURL);
@@ -58,7 +62,10 @@ const App = () => {
   
   // Genre filter
   const [genres, setGenres] = useState([]);
-  const [selectedGenre, setSelectedGenre] = useState(null);
+  const [selectedGenre, setSelectedGenre] = useState(() => {
+    const saved = localStorage.getItem('watchlog_selectedGenre');
+    return saved || null;
+  });
 
   // Series state (Phase 3)
   const [viewMode, setViewMode] = useState(() => {
@@ -80,7 +87,21 @@ const App = () => {
   // Guardar viewMode en localStorage cuando cambia
   useEffect(() => {
     localStorage.setItem('watchlog_viewMode', viewMode);
+    setCurrentPage(0);
   }, [viewMode]);
+
+  // Guardar filtros en localStorage cuando cambian
+  useEffect(() => {
+    localStorage.setItem('watchlog_filterStatus', filterStatus);
+  }, [filterStatus]);
+
+  useEffect(() => {
+    localStorage.setItem('watchlog_minRating', minRating.toString());
+  }, [minRating]);
+
+  useEffect(() => {
+    localStorage.setItem('watchlog_selectedGenre', selectedGenre || '');
+  }, [selectedGenre]);
 
   // Recargar películas/series cuando cambia la página, el filtro o el modo de vista
   useEffect(() => {
@@ -121,10 +142,8 @@ const App = () => {
    */
   const loadAllSeries = async () => {
     try {
-      const statusId = filterStatus === 'all' ? null : parseInt(filterStatus);
-      
-      // Cargar todas sin paginación
-      const data = await seriesApi.getAll(0, 10000, statusId);
+      // Cargar TODAS sin paginación y sin filtro de status
+      const data = await seriesApi.getAll(0, 10000, null);
       setAllSeries(data || []);
     } catch (error) {
       console.error('Error loading all series:', error);
@@ -250,10 +269,8 @@ const App = () => {
    */
   const loadAllMovies = async () => {
     try {
-      const statusId = filterStatus === 'all' ? null : parseInt(filterStatus);
-      
-      // Cargar todas sin paginación
-      const data = await moviesApi.getAll(0, 10000, statusId);
+      // Cargar TODAS sin paginación y sin filtro de status
+      const data = await moviesApi.getAll(0, 10000, null);
       setAllMovies(data || []);
     } catch (error) {
       console.error('Error loading all movies:', error);
@@ -807,8 +824,11 @@ const App = () => {
         matchesGenre = false;
       }
     }
+
+    // Filtrar por status
+    const matchesStatus = filterStatus === 'all' ? true : serie.status_id === parseInt(filterStatus);
     
-    return (matchesTitle || matchesYear) && matchesRating && matchesGenre;
+    return (matchesTitle || matchesYear) && matchesRating && matchesGenre && matchesStatus;
   });
 
   /**
@@ -851,8 +871,11 @@ const App = () => {
         matchesGenre = false;
       }
     }
+
+    // Filtrar por status
+    const matchesStatus = filterStatus === 'all' ? true : movie.status_id === parseInt(filterStatus);
     
-    return (matchesTitle || matchesYear || matchesDirector) && matchesRating && matchesGenre;
+    return (matchesTitle || matchesYear || matchesDirector) && matchesRating && matchesGenre && matchesStatus;
   });
 
   // Calcular paginación ANTES de usarla
@@ -890,6 +913,17 @@ const App = () => {
     setCurrentPage(0);
   };
 
+  /**
+   * Limpiar todos los filtros (al hacer click en el título)
+   */
+  const clearAllFilters = () => {
+    setFilterStatus('all');
+    setMinRating(0);
+    setSelectedGenre(null);
+    setSearchTerm('');
+    setCurrentPage(0);
+  };
+
   // Render de la UI - Siempre mostrar la app (sin pantalla de login al inicio)
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -900,11 +934,7 @@ const App = () => {
             <button
               onClick={() => {
                 // Reset everything to initial state
-                setSearchTerm('');
-                setCurrentPage(0);
-                setFilterStatus('all');
-                setMinRating(0);
-                setSelectedGenre(null);
+                clearAllFilters();
                 setShowAddMovieModal(false);
               }}
               className="flex items-center gap-3 hover:opacity-80 transition cursor-pointer group"

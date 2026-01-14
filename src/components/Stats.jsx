@@ -14,11 +14,12 @@ import { ELEMENT_STYLES } from '../styles/buttonStyles.js';
 
 const Stats = ({ movies, statuses, filterStatus = 'all', onFilterChange }) => {
   const handleClick = (statusId) => {
+    const statusIdString = statusId.toString();
     // Si hace click en el estado ya seleccionado, deselecciona (vuelve a todos)
-    if (filterStatus === statusId) {
+    if (filterStatus === statusIdString) {
       onFilterChange('all');
     } else {
-      onFilterChange(statusId);
+      onFilterChange(statusIdString);
     }
   };
 
@@ -31,7 +32,7 @@ const Stats = ({ movies, statuses, filterStatus = 'all', onFilterChange }) => {
     <div className={`grid ${gridColsClass} gap-4`}>
       {statuses.map((status) => {
         const count = movies.filter((m) => m.status_id === status.id).length;
-        const isSelected = filterStatus === status.id;
+        const isSelected = filterStatus === status.id.toString();
         
         return (
           <button
