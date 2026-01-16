@@ -1202,7 +1202,7 @@ const App = () => {
             </div>
           </div>
         </div>
-      )}}
+      )}
 
       {/* Export Modal */}
       {showExportModal && (

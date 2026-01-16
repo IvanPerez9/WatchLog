@@ -70,7 +70,9 @@ export const SeriesCard = ({ series, statuses, onDelete, onUpdate, onStatusChang
   };
 
   const progressPercentage = series.total_seasons 
-    ? (editedData.current_season / series.total_seasons) * 100 
+    ? series.status_id === 1 && editedData.current_season === 1
+      ? 0
+      : (editedData.current_season / series.total_seasons) * 100 
     : 0;
 
   const [showStatusMenu, setShowStatusMenu] = useState(false);
