@@ -84,13 +84,6 @@ const Export = ({ movies, onClose }) => {
             JSON
           </button>
         </div>
-
-        <button
-          onClick={onClose}
-          className={`${BUTTON_STYLES.secondary} w-full mt-6`}
-        >
-          Close
-        </button>
       </div>
     </div>
   );

@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Film, Tv } from 'lucide-react';
+import { Film, Tv, X } from 'lucide-react';
 import { moviesApi, seriesApi, statusesApi } from './api/supabase.js';
 import { tmdbApi } from './api/tmdb.js';
 import config from './config.js';
@@ -1170,11 +1170,19 @@ const App = () => {
       {showAddMovieModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-slate-800 rounded-lg p-8 w-full max-w-md">
-            <h2 className="text-white text-xl font-semibold mb-6">
-              Add New {viewMode === 'movies' ? 'Movie' : 'Series'}
-            </h2>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-white text-xl font-semibold">
+                Add New {viewMode === 'movies' ? 'Movie' : 'Series'}
+              </h2>
+              <button
+                onClick={() => setShowAddMovieModal(false)}
+                className="text-slate-400 hover:text-white transition"
+              >
+                <X size={24} />
+              </button>
+            </div>
             
-            <div className="mb-4">
+            <div>
               {viewMode === 'movies' ? (
                 <AddMovie 
                   onAdd={(title) => {
@@ -1192,16 +1200,9 @@ const App = () => {
                 />
               )}
             </div>
-            
-            <button
-              onClick={() => setShowAddMovieModal(false)}
-              className={BUTTON_STYLES.secondary}
-            >
-              Cancel
-            </button>
           </div>
         </div>
-      )}
+      )}}
 
       {/* Export Modal */}
       {showExportModal && (
