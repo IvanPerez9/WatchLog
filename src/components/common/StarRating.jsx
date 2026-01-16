@@ -16,11 +16,12 @@ export const StarRating = ({
   onStarHover,
   onMouseLeave,
   showText = true,
+  pendingMessage = null,
 }) => {
   const displayRating = hoverRating || rating;
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex flex-col gap-1">
       <div className="flex gap-0.5">
         {[1, 2, 3, 4, 5].map((starNumber) => (
           <button
@@ -55,6 +56,11 @@ export const StarRating = ({
       {showText && rating > 0 && (
         <span className="text-xs text-yellow-400 font-medium">
           {getRatingText(rating)}
+        </span>
+      )}
+      {pendingMessage && statusId === 1 && (
+        <span className="text-xs text-slate-400 italic">
+          {pendingMessage}
         </span>
       )}
     </div>

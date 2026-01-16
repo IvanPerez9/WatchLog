@@ -39,7 +39,7 @@ const AddMovie = ({ onAdd, placeholder = 'Movie title...' }) => {
         <button
           type="submit"
           disabled={loading || !title.trim()}
-          className="w-full sm:w-auto px-4 sm:px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg flex items-center justify-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base whitespace-nowrap"
+          className="w-full sm:w-auto px-4 sm:px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center justify-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base whitespace-nowrap"
         >
           <Plus className="w-5 h-5" />
           {loading ? 'Adding...' : 'Add'}

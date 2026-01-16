@@ -144,7 +144,7 @@ const MovieCard = ({ movie, statuses, onStatusChange, onDelete, onRatingChange, 
         )}
 
         {/* Rating with stars */}
-        <div className="mb-2 pb-2 border-b border-slate-700">
+        <div className="mb-2 pb-2 border-b border-slate-700 min-h-[3rem]">
           <StarRating
             rating={rating}
             hoverRating={hoverRating}
@@ -153,12 +153,8 @@ const MovieCard = ({ movie, statuses, onStatusChange, onDelete, onRatingChange, 
             onStarHover={handleStarHover}
             onMouseLeave={() => setHoverRating(0)}
             showText={true}
+            pendingMessage="Rate when you watch it"
           />
-          {movie.status_id === 1 && (
-            <p className="text-slate-400 text-xs italic mt-1">
-              Rate when you watch it
-            </p>
-          )}
         </div>
 
         {/* Status selector */}

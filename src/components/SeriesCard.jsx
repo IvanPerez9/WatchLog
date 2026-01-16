@@ -118,7 +118,7 @@ export const SeriesCard = ({ series, statuses, onDelete, onUpdate, onStatusChang
         <p className="text-xs text-slate-400 mb-2">{series.year || 'N/A'}</p>
 
         {/* Rating Stars - Interactive */}
-        <div className="mb-2">
+        <div className="mb-2 pb-2 border-b border-slate-700 min-h-[3rem]">
           <StarRating
             rating={series.rating || 0}
             hoverRating={hoverRating}
@@ -127,8 +127,9 @@ export const SeriesCard = ({ series, statuses, onDelete, onUpdate, onStatusChang
             onStarHover={handleStarHover}
             onMouseLeave={() => setHoverRating(0)}
             showText={series.rating > 0}
+            pendingMessage="Rate when you watch it"
           />
-          {!series.rating && (
+          {!series.rating && series.status_id !== 1 && (
             <span className="text-xs text-slate-400">-</span>
           )}
         </div>
