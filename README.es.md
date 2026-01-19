@@ -278,6 +278,7 @@ Ver [LICENSE](LICENSE) para más detalles.
 - [ ] Componente de serie con episodios/temporadas
 - [ ] Gestión de series (añadir, editar, eliminar, calificar)
 - [ ] Búsqueda y filtrado de series
+- [ ] Ver filtros por fecha añadida o modificada ?
 
 ### Fase 4 - Soporte para Libros
 - [ ] Tabla separada `books` en la base de datos
@@ -289,6 +290,7 @@ Ver [LICENSE](LICENSE) para más detalles.
 ### Fase 5 - Características Avanzadas
 - [ ] Listas personalizadas y colecciones
 - [ ] Tema oscuro/claro
+- [ ] Cambio de idioma
 - ...
 
 ---

@@ -269,6 +269,7 @@ See [LICENSE](LICENSE.md) for more details.
 - [ ] Series card component with episodes/seasons
 - [ ] Series management (add, edit, delete, rate)
 - [ ] Search and filter for series
+- [ ] Filters by date
 
 ### Phase 4 - Books Support (Q2 2026)
 - [ ] Separate `books` table in database
@@ -280,8 +281,6 @@ See [LICENSE](LICENSE.md) for more details.
 ### Phase 5 - Advanced Features
 - [ ] Custom lists and collections
 - [ ] Dark/Light theme toggle
-- [ ] Change languaje
-...
 - [ ] Change languaje
 ...
 
