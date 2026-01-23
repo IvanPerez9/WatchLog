@@ -1042,6 +1042,7 @@ const App = () => {
               setCurrentPage(0);
             }}
             genres={genres}
+            viewMode={viewMode}
           />
         </div>
 
@@ -1209,6 +1210,7 @@ const App = () => {
         <Export 
           movies={viewMode === 'movies' ? allMovies : allSeries}
           onClose={() => setShowExportModal(false)}
+          viewMode={viewMode}
         />
       )}
     </div>
