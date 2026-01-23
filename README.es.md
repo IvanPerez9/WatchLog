@@ -55,8 +55,9 @@ Aplicación web para gestionar tu biblioteca de películas. Trackea películas v
 
 ### Gestión de Estados
 - **Películas**: Pendiente, Vista, Favorita
-- **Series**: Pendiente, Vista, Favorita, Viendo (trackea series actuales)
-- Seguimiento de temporadas con barra de progreso
+- **Series**: Pendiente, Vista, Favorita, Viendo (trackea temporada actual con barra de progreso)
+- Seguimiento de temporadas con indicador visual de progreso
+- Muestra 0% de progreso para series pendientes para evitar confusión
 
 ### Búsqueda y Filtrado
 - 🔍 **Búsqueda global** - Por título, año o director
@@ -272,13 +273,15 @@ Ver [LICENSE](LICENSE) para más detalles.
 - [x] Filtros avanzados (por rango de años, director, etc.)
 - [x] Opciones de ordenamiento (por rating, fecha añadida, etc.)
 
-### Fase 3 - Soporte para Series
-- [ ] Tabla separada `series` en la base de datos
-- [ ] Integración con API TMDB para TV
-- [ ] Componente de serie con episodios/temporadas
-- [ ] Gestión de series (añadir, editar, eliminar, calificar)
-- [ ] Búsqueda y filtrado de series
-- [ ] Ver filtros por fecha añadida o modificada ?
+### Fase 3 - Soporte para Series ✅
+- [x] Tabla separada `series` en la base de datos
+- [x] Integración con API TMDB para TV
+- [x] Componente de serie con seguimiento de temporadas
+- [x] Gestión de series (añadir, editar, eliminar, calificar)
+- [x] Búsqueda y filtrado de series
+- [x] Trackea temporada actual con barra de progreso
+- [x] UI consistente entre películas y series
+- [x] Ordenamiento por actualizaciones recientes (por `updated_at`)
 
 ### Fase 4 - Soporte para Libros
 - [ ] Tabla separada `books` en la base de datos

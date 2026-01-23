@@ -58,8 +58,9 @@ Web application to manage your movie library. Track watched, pending, and in-pro
 
 ### Status Management
 - **Movies**: Pending, Watched, Favorite
-- **Series**: Pending, Watched, Favorite, Watching (track current series)
-- Track seasons watched for series with progress bar
+- **Series**: Pending, Watched, Favorite, Watching (track current season with progress bar)
+- Track seasons watched for series with visual progress indicator
+- Shows 0% progress for pending series to avoid confusion
 
 ### Search and Filtering
 - 🔍 **Global Search** - By title, year, or director
@@ -263,13 +264,15 @@ See [LICENSE](LICENSE.md) for more details.
 - [x] Advanced filters (by year range, director, etc.)
 - [x] Sort options (by rating, date added, etc.)
 
-### Phase 3 - TV Series Support
-- [ ] Separate `series` table in database
-- [ ] TMDB TV API integration
-- [ ] Series card component with episodes/seasons
-- [ ] Series management (add, edit, delete, rate)
-- [ ] Search and filter for series
-- [ ] Filters by date
+### Phase 3 - TV Series Support ✅
+- [x] Separate `series` table in database
+- [x] TMDB TV API integration
+- [x] Series card component with seasons tracking
+- [x] Series management (add, edit, delete, rate)
+- [x] Search and filter for series
+- [x] Track current season with progress bar
+- [x] Consistent UI between movies and series
+- [x] Recent updates sorting (by `updated_at`)
 
 ### Phase 4 - Books Support (Q2 2026)
 - [ ] Separate `books` table in database
