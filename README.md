@@ -273,8 +273,10 @@ See [LICENSE](LICENSE.md) for more details.
 - [x] Track current season with progress bar
 - [x] Consistent UI between movies and series
 - [x] Recent updates sorting (by `updated_at`)
+- [ ] Display "Updated X hours ago" on cards (using `updated_at`)
+- [ ] Loading spinners during data fetch (optional)
 
-### Phase 4 - Books Support (Q2 2026)
+### Phase 4 - Books Support
 - [ ] Separate `books` table in database
 - [ ] Google Books API or OpenLibrary integration
 - [ ] Book card component with author/ISBN

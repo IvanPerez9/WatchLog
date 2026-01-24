@@ -282,6 +282,8 @@ Ver [LICENSE](LICENSE) para más detalles.
 - [x] Trackea temporada actual con barra de progreso
 - [x] UI consistente entre películas y series
 - [x] Ordenamiento por actualizaciones recientes (por `updated_at`)
+- [ ] Mostrar "Actualizado hace X horas" en las tarjetas (usando `updated_at`)
+- [ ] Spinners de carga durante la obtención de datos (opcional)
 
 ### Fase 4 - Soporte para Libros
 - [ ] Tabla separada `books` en la base de datos
