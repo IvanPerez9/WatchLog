@@ -204,18 +204,39 @@ Inicia sesión con tu token para:
 ```
 watchlog/
 ├── src/
-│   ├── app.jsx              # Componente principal
-│   ├── config.js            # Configuración
+│   ├── app.jsx                    # Componente principal
+│   ├── config.js                  # Configuración
+│   ├── index.jsx                  # Punto de entrada
 │   ├── api/
-│   │   ├── supabase.js      # Cliente REST
-│   │   └── tmdb.js          # Cliente TMDB
+│   │   ├── supabase.js            # Cliente REST Supabase
+│   │   ├── supabase-client.js     # Instancia cliente Supabase
+│   │   └── tmdb.js                # Cliente TMDB API
 │   ├── auth/
-│   │   └── useAuth.js       # Hook auth
-│   └── components/
-│       ├── MovieCard.jsx    
-│       ├── AddMovie.jsx     
-│       ├── Filters.jsx      
-│       └── Stats.jsx        
+│   │   ├── useAuth.js             # Hook autenticación
+│   │   └── LoginModal.jsx         # Componente modal login
+│   ├── components/
+│   │   ├── common/                # Componentes reutilizables
+│   │   │   ├── StarRating.jsx
+│   │   │   ├── PosterImage.jsx
+│   │   │   ├── DeleteButton.jsx
+│   │   │   └── StatusSelector.jsx
+│   │   ├── movies/                # Componentes específicos películas
+│   │   │   ├── MovieCard.jsx
+│   │   │   └── AddMovieForm.jsx
+│   │   ├── series/                # Componentes específicos series
+│   │   │   ├── SeriesCard.jsx
+│   │   │   └── AddSeriesForm.jsx
+│   │   ├── shared/                # Componentes UI compartidos
+│   │   │   ├── Filters.jsx
+│   │   │   ├── Stats.jsx
+│   │   │   └── Export.jsx
+│   ├── styles/
+│   │   └── buttonStyles.js        # Constantes estilos botones
+│   └── utils/
+│       ├── ratingUtils.js
+│       ├── exportUtils.js
+│       └── dateUtils.js
+├── public/
 ├── index.html
 ├── package.json
 ├── vite.config.js
@@ -282,7 +303,7 @@ Ver [LICENSE](LICENSE) para más detalles.
 - [x] Trackea temporada actual con barra de progreso
 - [x] UI consistente entre películas y series
 - [x] Ordenamiento por actualizaciones recientes (por `updated_at`)
-- [ ] Mostrar "Actualizado hace X horas" en las tarjetas (usando `updated_at`)
+- [x] Mostrar "Actualizado hace X horas" en las tarjetas (usando `updated_at`)
 - [ ] Spinners de carga durante la obtención de datos (opcional)
 
 ### Fase 4 - Soporte para Libros

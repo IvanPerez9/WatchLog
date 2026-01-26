@@ -9,8 +9,8 @@
 
 import React from 'react';
 import { Download, X } from 'lucide-react';
-import { exportToCSV, exportToJSON } from '../utils/exportUtils.js';
-import { BUTTON_STYLES } from '../styles/buttonStyles.js';
+import { exportToCSV, exportToJSON } from '../../utils/exportUtils.js';
+import { BUTTON_STYLES } from '../../styles/buttonStyles.js';
 
 const Export = ({ movies, onClose, viewMode = 'movies' }) => {
   const contentType = viewMode === 'movies' ? 'movies' : 'series';

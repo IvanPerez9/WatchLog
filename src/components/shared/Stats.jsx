@@ -10,7 +10,7 @@
  */
 
 import React from 'react';
-import { ELEMENT_STYLES } from '../styles/buttonStyles.js';
+import { ELEMENT_STYLES } from '../../styles/buttonStyles.js';
 
 const Stats = ({ movies, statuses, filterStatus = 'all', onFilterChange }) => {
   const handleClick = (statusId) => {

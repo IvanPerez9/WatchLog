@@ -209,18 +209,39 @@ Sign in with your token to:
 ```
 watchlog/
 ├── src/
-│   ├── app.jsx              # Main component
-│   ├── config.js            # Configuration
+│   ├── app.jsx                    # Main application component
+│   ├── config.js                  # Configuration
+│   ├── index.jsx                  # Entry point
 │   ├── api/
-│   │   ├── supabase.js      # REST client
-│   │   └── tmdb.js          # TMDB client
+│   │   ├── supabase.js            # Supabase REST client
+│   │   ├── supabase-client.js     # Supabase client instance
+│   │   └── tmdb.js                # TMDB API client
 │   ├── auth/
-│   │   └── useAuth.js       # Auth hook
-│   └── components/
-│       ├── MovieCard.jsx    
-│       ├── AddMovie.jsx     
-│       ├── Filters.jsx      
-│       └── Stats.jsx        
+│   │   ├── useAuth.js             # Authentication hook
+│   │   └── LoginModal.jsx         # Login modal component
+│   ├── components/
+│   │   ├── common/                # Reusable components
+│   │   │   ├── StarRating.jsx
+│   │   │   ├── PosterImage.jsx
+│   │   │   ├── DeleteButton.jsx
+│   │   │   └── StatusSelector.jsx
+│   │   ├── movies/                # Movie-specific components
+│   │   │   ├── MovieCard.jsx
+│   │   │   └── AddMovieForm.jsx
+│   │   ├── series/                # Series-specific components
+│   │   │   ├── SeriesCard.jsx
+│   │   │   └── AddSeriesForm.jsx
+│   │   ├── shared/                # Shared UI components
+│   │   │   ├── Filters.jsx
+│   │   │   ├── Stats.jsx
+│   │   │   └── Export.jsx
+│   ├── styles/
+│   │   └── buttonStyles.js        # Button styling constants
+│   └── utils/
+│       ├── ratingUtils.js
+│       ├── exportUtils.js
+│       └── dateUtils.js
+├── public/
 ├── index.html
 ├── package.json
 ├── vite.config.js
@@ -273,7 +294,7 @@ See [LICENSE](LICENSE.md) for more details.
 - [x] Track current season with progress bar
 - [x] Consistent UI between movies and series
 - [x] Recent updates sorting (by `updated_at`)
-- [ ] Display "Updated X hours ago" on cards (using `updated_at`)
+- [x] Display "Updated X hours ago" on cards (using `updated_at`)
 - [ ] Loading spinners during data fetch (optional)
 
 ### Phase 4 - Books Support

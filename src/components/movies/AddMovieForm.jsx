@@ -1,16 +1,16 @@
 /**
- * Componente AddMovie
- * Formulario para añadir nuevas películas o series
+ * Componente AddMovieForm
+ * Formulario para añadir nuevas películas
  * 
  * Props:
- * - onAdd: callback cuando se añade una película/serie
+ * - onAdd: callback cuando se añade una película
  * - placeholder: texto del placeholder (por defecto "Movie title...")
  */
 
 import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
 
-const AddMovie = ({ onAdd, placeholder = 'Movie title...' }) => {
+const AddMovieForm = ({ onAdd, placeholder = 'Movie title...' }) => {
   const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -49,4 +49,4 @@ const AddMovie = ({ onAdd, placeholder = 'Movie title...' }) => {
   );
 };
 
-export default AddMovie;
+export default AddMovieForm;

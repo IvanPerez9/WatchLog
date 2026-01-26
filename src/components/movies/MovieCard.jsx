@@ -11,11 +11,11 @@
  */
 
 import React from 'react';
-import { Film, Trash2, Star } from 'lucide-react';
-import { tmdbApi } from '../api/tmdb.js';
-import { getRatingText } from '../utils/ratingUtils.js';
-import { getRelativeTime } from '../utils/dateUtils.js';
-import { StarRating } from './common/StarRating.jsx';
+import { Film, Trash2 } from 'lucide-react';
+import { tmdbApi } from '../../api/tmdb.js';
+import { getRatingText } from '../../utils/ratingUtils.js';
+import { getRelativeTime } from '../../utils/dateUtils.js';
+import { StarRating } from '../common/StarRating.jsx';
 
 const MovieCard = ({ movie, statuses, onStatusChange, onDelete, onRatingChange, user }) => {
   const posterUrl = tmdbApi.getPosterUrl(movie.poster_path);
@@ -57,41 +57,6 @@ const MovieCard = ({ movie, statuses, onStatusChange, onDelete, onRatingChange, 
 
     const hoverValue = isLeftHalf ? starNumber - 0.5 : starNumber;
     setHoverRating(hoverValue);
-  };
-
-  // Renderizar estrellas (completas, media, vacías)
-  // Renderizar estrellas (completas, media, vacías)
-  const renderStars = (fillAmount) => {
-    const stars = [];
-    
-    for (let i = 1; i <= 5; i++) {
-      const isFilled = fillAmount >= i;
-      const isHalf = fillAmount > i - 1 && fillAmount < i;
-
-      if (isFilled) {
-        stars.push(
-          <Star
-            key={i}
-            className="w-4 h-4 fill-yellow-400 text-yellow-400"
-          />
-        );
-      } else if (isHalf) {
-        // Media estrella
-        stars.push(
-          <div key={i} className="relative w-4 h-4">
-            <Star className="w-4 h-4 text-slate-600" />
-            <div className="absolute top-0 left-0 w-2 h-4 overflow-hidden">
-              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-            </div>
-          </div>
-        );
-      } else {
-        stars.push(
-          <Star key={i} className="w-4 h-4 text-slate-600" />
-        );
-      }
-    }
-    return stars;
   };
 
   return (

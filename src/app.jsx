@@ -9,12 +9,13 @@ import { Film, Tv, X } from 'lucide-react';
 import { moviesApi, seriesApi, statusesApi } from './api/supabase.js';
 import { tmdbApi } from './api/tmdb.js';
 import config from './config.js';
-import MovieCard from './components/MovieCard.jsx';
-import SeriesCard from './components/SeriesCard.jsx';
-import AddMovie from './components/AddMovie.jsx';
-import Filters from './components/Filters.jsx';
-import Stats from './components/Stats.jsx';
-import Export from './components/Export.jsx';
+import MovieCard from './components/movies/MovieCard.jsx';
+import { SeriesCard } from './components/series/SeriesCard.jsx';
+import AddMovieForm from './components/movies/AddMovieForm.jsx';
+import Filters from './components/shared/Filters.jsx';
+import Stats from './components/shared/Stats.jsx';
+import Export from './components/shared/Export.jsx';
+import LoginModal from './components/auth/LoginModal.jsx';
 import { useAuth } from './auth/useAuth.js';
 import { BUTTON_STYLES } from './styles/buttonStyles.js';
 
@@ -1126,46 +1127,17 @@ const App = () => {
       </div>
 
       {/* Modal de Login */}
-      {showLoginModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-lg p-8 w-full max-w-md">
-            <h2 className="text-white text-xl font-semibold mb-6">You need to authenticate</h2>
-            
-            <div className="space-y-4">
-              <input
-                type="password"
-                placeholder="Paste your Access Token"
-                value={token}
-                onChange={(e) => setToken(e.target.value)}
-                className="w-full bg-slate-700 text-white p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-              />
-              
-              <div className="flex gap-2">
-                <button
-                  onClick={handleLoginModal}
-                  className={BUTTON_STYLES.primary_lg}
-                >
-                  Sign In
-                </button>
-                <button
-                  onClick={() => {
-                    setShowLoginModal(false);
-                    setToken('');
-                    setPendingAction(null);
-                  }}
-                  className={BUTTON_STYLES.secondary}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-            
-            <p className="text-slate-400 text-xs mt-4 text-center">
-              Supabase → Settings → API → anon key
-            </p>
-          </div>
-        </div>
-      )}
+      <LoginModal
+        show={showLoginModal}
+        token={token}
+        onTokenChange={setToken}
+        onSignIn={handleLoginModal}
+        onClose={() => {
+          setShowLoginModal(false);
+          setToken('');
+          setPendingAction(null);
+        }}
+      />
 
       {/* Add Movie/Series Modal */}
       {showAddMovieModal && (
@@ -1185,14 +1157,14 @@ const App = () => {
             
             <div>
               {viewMode === 'movies' ? (
-                <AddMovie 
+                <AddMovieForm 
                   onAdd={(title) => {
                     handleAddMovie(title);
                     setShowAddMovieModal(false);
                   }}
                 />
               ) : (
-                <AddMovie 
+                <AddMovieForm 
                   onAdd={(title) => {
                     handleAddSeries(title);
                     setShowAddMovieModal(false);
