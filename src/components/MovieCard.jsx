@@ -14,6 +14,7 @@ import React from 'react';
 import { Film, Trash2, Star } from 'lucide-react';
 import { tmdbApi } from '../api/tmdb.js';
 import { getRatingText } from '../utils/ratingUtils.js';
+import { getRelativeTime } from '../utils/dateUtils.js';
 import { StarRating } from './common/StarRating.jsx';
 
 const MovieCard = ({ movie, statuses, onStatusChange, onDelete, onRatingChange, user }) => {
@@ -142,6 +143,9 @@ const MovieCard = ({ movie, statuses, onStatusChange, onDelete, onRatingChange, 
         {movie.year && (
           <div className="text-slate-400 text-xs mb-2">{movie.year}</div>
         )}
+
+        {/* Updated time */}
+        <p className="text-slate-500 text-xs mb-2">Updated {getRelativeTime(movie.updated_at)}</p>
 
         {/* Rating with stars */}
         <div className="mb-2 pb-2 border-b border-slate-700 min-h-[3rem]">

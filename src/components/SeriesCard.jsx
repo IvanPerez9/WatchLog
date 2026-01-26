@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Star, Trash2, Edit2, Check, X, ChevronDown } from 'lucide-react';
 import { getRatingText } from '../utils/ratingUtils.js';
+import { getRelativeTime } from '../utils/dateUtils.js';
 import { StarRating } from './common/StarRating.jsx';
 
 /**
@@ -116,6 +117,9 @@ export const SeriesCard = ({ series, statuses, onDelete, onUpdate, onStatusChang
         {/* Title & Year */}
         <h3 className="text-white font-semibold text-sm mb-1 truncate" title={series.title}>{series.title}</h3>
         <p className="text-xs text-slate-400 mb-2">{series.year || 'N/A'}</p>
+
+        {/* Updated time */}
+        <p className="text-slate-500 text-xs mb-2">Updated {getRelativeTime(series.updated_at)}</p>
 
         {/* Rating Stars - Interactive */}
         <div className="mb-2 pb-2 border-b border-slate-700 min-h-[3rem]">

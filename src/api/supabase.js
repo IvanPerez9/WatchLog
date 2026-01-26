@@ -57,7 +57,7 @@ export const moviesApi = {
     const to = from + pageSize - 1;
     
     // Construir query base con JOIN a status (INCLUYE rating, director, genres)
-    let query = `movies?select=id,title,year,poster_path,status_id,rating,director,genres,status!inner(description)&order=updated_at.desc,id.desc`;
+    let query = `movies?select=id,title,year,poster_path,status_id,rating,director,genres,updated_at,status!inner(description)&order=updated_at.desc,id.desc`;
     
     // Añadir filtro por status si es necesario
     if (statusId !== null) {
@@ -153,7 +153,7 @@ export const seriesApi = {
     const to = from + pageSize - 1;
     
     // Construir query base con JOIN a status (INCLUYE rating, genres)
-    let query = `series?select=id,title,year,poster_path,status_id,rating,genres,total_seasons,current_season,status!inner(description)&order=updated_at.desc,id.desc`;
+    let query = `series?select=id,title,year,poster_path,status_id,rating,genres,total_seasons,current_season,updated_at,status!inner(description)&order=updated_at.desc,id.desc`;
     
     // Añadir filtro por status si es necesario
     if (statusId !== null) {
