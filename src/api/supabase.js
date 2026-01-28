@@ -57,7 +57,7 @@ export const moviesApi = {
     const to = from + pageSize - 1;
     
     // Construir query base con JOIN a status (INCLUYE rating, director, genres)
-    let query = `movies?select=id,title,year,poster_path,status_id,rating,director,genres,status!inner(description)&order=id.desc`;
+    let query = `movies?select=id,title,year,poster_path,status_id,rating,director,genres,updated_at,status!inner(description)&order=updated_at.desc,id.desc`;
     
     // Añadir filtro por status si es necesario
     if (statusId !== null) {
@@ -136,6 +136,102 @@ export const moviesApi = {
    */
   delete: async (id, token) => {
     return supabaseFetch(`movies?id=eq.${id}`, {
+      method: 'DELETE',
+    }, token);
+  },
+};
+
+/**
+ * API de Series - CRUD completo (Phase 3)
+ */
+export const seriesApi = {
+  /**
+   * GET /series - Listar series con paginación (sin token requerido)
+   */
+  getAll: async (page = 0, pageSize = 20, statusId = null) => {
+    const from = page * pageSize;
+    const to = from + pageSize - 1;
+    
+    // Construir query base con JOIN a status (INCLUYE rating, genres)
+    let query = `series?select=id,title,year,poster_path,status_id,rating,genres,total_seasons,current_season,updated_at,status!inner(description)&order=updated_at.desc,id.desc`;
+    
+    // Añadir filtro por status si es necesario
+    if (statusId !== null) {
+      query += `&status_id=eq.${statusId}`;
+    }
+    
+    console.log('🔗 Series Query final:', query);
+    
+    try {
+      // Hacer la petición con header Range para paginación
+      const result = await supabaseFetch(query, {
+        headers: {
+          'Range': `${from}-${to}`,
+        }
+      });
+      
+      console.log('📦 Series Resultado:', result);
+      console.log('📊 Total items:', result?.length || 0);
+      
+      return result;
+    } catch (error) {
+      console.error('❌ Error en getAll series:', error);
+      return [];
+    }
+  },
+
+  /**
+   * GET /series - Contar total de series (para paginación)
+   * @param {number|null} statusId - Filtrar por estado (null = todos)
+   */
+  count: async (statusId = null) => {
+    let query = 'series?select=count';
+    
+    if (statusId !== null) {
+      query += `&status_id=eq.${statusId}`;
+    }
+    
+    const result = await supabaseFetch(query, {
+      headers: {
+        'Prefer': 'count=exact',
+      }
+    });
+    
+    return result;
+  },
+
+  /**
+   * POST /series - Crear una serie
+   * @param {Object} series - {title, year, status_id, poster_path, genres, total_seasons}
+   * @param {string} token - Token de autenticación
+   */
+  create: async (series, token) => {
+    return supabaseFetch('series', {
+      method: 'POST',
+      body: JSON.stringify(series),
+    }, token);
+  },
+
+  /**
+   * PATCH /series?id=eq.{id} - Actualizar una serie
+   * @param {number} id - ID de la serie
+   * @param {Object} updates - Campos a actualizar
+   * @param {string} token - Token de autenticación
+   */
+  update: async (id, updates, token) => {
+    return supabaseFetch(`series?id=eq.${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updates),
+    }, token);
+  },
+
+  /**
+   * DELETE /series?id=eq.{id} - Eliminar una serie
+   * @param {number} id - ID de la serie
+   * @param {string} token - Token de autenticación
+   */
+  delete: async (id, token) => {
+    return supabaseFetch(`series?id=eq.${id}`, {
       method: 'DELETE',
     }, token);
   },

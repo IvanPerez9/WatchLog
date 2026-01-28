@@ -22,7 +22,8 @@ const Filters = ({
   onMinRatingChange,
   selectedGenre = null,
   onGenreChange,
-  genres = []
+  genres = [],
+  viewMode = 'movies'
 }) => {
   return (
     <div className="bg-slate-800 rounded-lg p-6">
@@ -34,7 +35,7 @@ const Filters = ({
             type="text"
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search movies by title, year or director..."
+            placeholder={`Search ${viewMode} by title, year${viewMode === 'movies' ? ' or director' : ''}...`}
             className="w-full bg-slate-700 text-white pl-10 pr-10 py-3 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
           />
           {searchTerm && (
