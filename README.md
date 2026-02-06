@@ -295,7 +295,7 @@ See [LICENSE](LICENSE.md) for more details.
 - [x] Consistent UI between movies and series
 - [x] Recent updates sorting (by `updated_at`)
 - [x] Display "Updated X hours ago" on cards (using `updated_at`)
-- [ ] Loading spinners during data fetch (optional)
+- [x] Loading spinners during data fetch
 
 ### Phase 4 - Books Support
 - [ ] Separate `books` table in database

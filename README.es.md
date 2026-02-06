@@ -304,7 +304,7 @@ Ver [LICENSE](LICENSE) para más detalles.
 - [x] UI consistente entre películas y series
 - [x] Ordenamiento por actualizaciones recientes (por `updated_at`)
 - [x] Mostrar "Actualizado hace X horas" en las tarjetas (usando `updated_at`)
-- [ ] Spinners de carga durante la obtención de datos (opcional)
+- [x] Spinners de carga durante la obtención de datos
 
 ### Fase 4 - Soporte para Libros
 - [ ] Tabla separada `books` en la base de datos

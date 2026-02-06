@@ -18,6 +18,7 @@ import Export from './components/shared/Export.jsx';
 import LoginModal from './components/auth/LoginModal.jsx';
 import { useAuth } from './auth/useAuth.js';
 import { BUTTON_STYLES } from './styles/buttonStyles.js';
+import LoadingSpinner from './components/common/LoadingSpinner.jsx';
 
 const App = () => {
   // Get current page from URL params
@@ -1066,7 +1067,7 @@ const App = () => {
 
         {/* Lista de películas/series */}
         {loading ? (
-          <div className="text-center text-white py-12">Loading {viewMode === 'movies' ? 'movies' : 'series'}...</div>
+          <LoadingSpinner />
         ) : displayList.length === 0 ? (
           <div className="text-center text-slate-400 py-12">
             No {viewMode === 'movies' ? 'movies' : 'series'} to show
