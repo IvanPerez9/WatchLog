@@ -9,10 +9,11 @@
 
 import React from 'react';
 import { Download, X } from 'lucide-react';
-import { exportToCSV, exportToJSON } from '../utils/exportUtils.js';
-import { BUTTON_STYLES } from '../styles/buttonStyles.js';
+import { exportToCSV, exportToJSON } from '../../utils/exportUtils.js';
+import { BUTTON_STYLES } from '../../styles/buttonStyles.js';
 
-const Export = ({ movies, onClose }) => {
+const Export = ({ movies, onClose, viewMode = 'movies' }) => {
+  const contentType = viewMode === 'movies' ? 'movies' : 'series';
   if (!movies || movies.length === 0) {
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -26,7 +27,7 @@ const Export = ({ movies, onClose }) => {
               <X size={24} />
             </button>
           </div>
-          <p className="text-slate-300 mb-6">No movies to export.</p>
+          <p className="text-slate-300 mb-6">No {contentType} to export.</p>
           <button
             onClick={onClose}
             className={BUTTON_STYLES.secondary}
@@ -62,7 +63,7 @@ const Export = ({ movies, onClose }) => {
         </div>
 
         <p className="text-slate-300 mb-6">
-          Export your {movies.length} movies:
+          Export your {movies.length} {contentType}:
         </p>
 
         <div className="space-y-3">
@@ -84,13 +85,6 @@ const Export = ({ movies, onClose }) => {
             JSON
           </button>
         </div>
-
-        <button
-          onClick={onClose}
-          className={`${BUTTON_STYLES.secondary} w-full mt-6`}
-        >
-          Close
-        </button>
       </div>
     </div>
   );

@@ -49,22 +49,32 @@ Aplicación web para gestionar tu biblioteca de películas. Trackea películas v
 ## ✨ Características
 
 ### Core
-- 🎬 **CRUD completo** - Crear, leer, actualizar y eliminar películas
+- 🎬 **Películas y Series** - CRUD completo para películas y series TV
 - 🔐 **Autenticación segura** - Token-based con validación en base de datos
 - 💾 **Persistencia** - Todos los datos guardados en PostgreSQL (Supabase)
 
+### Gestión de Estados
+- **Películas**: Pendiente, Vista, Favorita
+- **Series**: Pendiente, Vista, Favorita, Viendo (trackea temporada actual con barra de progreso)
+- Seguimiento de temporadas con indicador visual de progreso
+- Muestra 0% de progreso para series pendientes para evitar confusión
+
 ### Búsqueda y Filtrado
-- 🔍 **Búsqueda global** - Por título o año en toda tu biblioteca
-- 🎭 **Filtrado por estado** - Pendiente, Vista, Viendo, Favorita
-- 📊 **Estadísticas** - Visualiza conteo de películas por estado
+- 🔍 **Búsqueda global** - Por título, año o director
+- 🎭 **Filtrado por estado** - Visualiza por estado actual
+- ⭐ **Filtrado por rating** - Encuentra contenido mejor valorado
+- 🎬 **Filtrado por género** - Organiza por tipo de contenido
+- 📊 **Estadísticas** - Desglose visual por estado
 
 ### Datos y Sincronización
-- 🖼️ **Pósters automáticos** - Sincronización con TMDB
-- 💻 **Sincronización en background** - Sin bloquear la interfaz
+- 🖼️ **Pósters automáticos** - Integración con TMDB
+- ⭐ **Sistema de rating** - Valora con precisión de media estrella
+- 📥 **Exporta datos** - Descarga tu biblioteca como CSV o JSON
 
 ### Interfaz
-- 📱 **Responsive design** - Funciona en móvil, tablet y desktop
-- ⚡ **Ultra rápido** - Carga instantánea, construcción con Vite
+- 📱 **Responsive design** - Móvil, tablet y desktop
+- ⚡ **Ultra rápido** - Construido con Vite
+- 🌙 **Tema oscuro** - Fácil para la vista
 
 ## 📋 Requisitos
 
@@ -147,18 +157,23 @@ Abre http://localhost:3000
 
 ## 💻 Uso
 
-### Sin autenticación (Lectura)
-- Ver películas
-- Buscar por título o año
-- Filtrar por estado
-- Ver estadísticas
+### Ver y Buscar
+- 👁️ Cambia entre pestaña Películas y Series
+- 🔍 Busca por título, año o director
+- 🎭 Filtra por estado (Pendiente, Vista, Favorita, Viendo)
+- ⭐ Filtra por rating mínimo
 
-### Acceso Autenticado (Escritura)
-Ingresa tu token para:
-- ➕ Agregar películas nuevas
-- ✏️ Cambiar estado de películas
-- 🗑️ Eliminar películas
-- 🔄 Sincronizar pósters con TMDB
+### Gestionar Contenido
+Inicia sesión con tu token para:
+- ➕ Agregar películas/series nuevas
+- ⭐ Valora con precisión de media estrella
+- 🎯 Cambia estado
+- 🗑️ Elimina elementos
+
+### Específico para Series
+- 📺 Trackea temporada actual con botones +/-
+- 📊 Barra de progreso muestra temporadas vistas
+- 📥 Auto-sincronización desde TMDB
 
 ## 🚀 Deploy
 
@@ -189,18 +204,39 @@ Ingresa tu token para:
 ```
 watchlog/
 ├── src/
-│   ├── app.jsx              # Componente principal
-│   ├── config.js            # Configuración
+│   ├── app.jsx                    # Componente principal
+│   ├── config.js                  # Configuración
+│   ├── index.jsx                  # Punto de entrada
 │   ├── api/
-│   │   ├── supabase.js      # Cliente REST
-│   │   └── tmdb.js          # Cliente TMDB
+│   │   ├── supabase.js            # Cliente REST Supabase
+│   │   ├── supabase-client.js     # Instancia cliente Supabase
+│   │   └── tmdb.js                # Cliente TMDB API
 │   ├── auth/
-│   │   └── useAuth.js       # Hook auth
-│   └── components/
-│       ├── MovieCard.jsx    
-│       ├── AddMovie.jsx     
-│       ├── Filters.jsx      
-│       └── Stats.jsx        
+│   │   ├── useAuth.js             # Hook autenticación
+│   │   └── LoginModal.jsx         # Componente modal login
+│   ├── components/
+│   │   ├── common/                # Componentes reutilizables
+│   │   │   ├── StarRating.jsx
+│   │   │   ├── PosterImage.jsx
+│   │   │   ├── DeleteButton.jsx
+│   │   │   └── StatusSelector.jsx
+│   │   ├── movies/                # Componentes específicos películas
+│   │   │   ├── MovieCard.jsx
+│   │   │   └── AddMovieForm.jsx
+│   │   ├── series/                # Componentes específicos series
+│   │   │   ├── SeriesCard.jsx
+│   │   │   └── AddSeriesForm.jsx
+│   │   ├── shared/                # Componentes UI compartidos
+│   │   │   ├── Filters.jsx
+│   │   │   ├── Stats.jsx
+│   │   │   └── Export.jsx
+│   ├── styles/
+│   │   └── buttonStyles.js        # Constantes estilos botones
+│   └── utils/
+│       ├── ratingUtils.js
+│       ├── exportUtils.js
+│       └── dateUtils.js
+├── public/
 ├── index.html
 ├── package.json
 ├── vite.config.js
@@ -256,14 +292,19 @@ Ver [LICENSE](LICENSE) para más detalles.
 ### Fase 2 - Export & Analytics ✅
 - [x] Exportar a CSV/JSON
 - [x] Filtros avanzados (por rango de años, director, etc.)
-- [ ] Opciones de ordenamiento (por rating, fecha añadida, etc.)
+- [x] Opciones de ordenamiento (por rating, fecha añadida, etc.)
 
-### Fase 3 - Soporte para Series
-- [ ] Tabla separada `series` en la base de datos
-- [ ] Integración con API TMDB para TV
-- [ ] Componente de serie con episodios/temporadas
-- [ ] Gestión de series (añadir, editar, eliminar, calificar)
-- [ ] Búsqueda y filtrado de series
+### Fase 3 - Soporte para Series ✅
+- [x] Tabla separada `series` en la base de datos
+- [x] Integración con API TMDB para TV
+- [x] Componente de serie con seguimiento de temporadas
+- [x] Gestión de series (añadir, editar, eliminar, calificar)
+- [x] Búsqueda y filtrado de series
+- [x] Trackea temporada actual con barra de progreso
+- [x] UI consistente entre películas y series
+- [x] Ordenamiento por actualizaciones recientes (por `updated_at`)
+- [x] Mostrar "Actualizado hace X horas" en las tarjetas (usando `updated_at`)
+- [x] Spinners de carga durante la obtención de datos
 
 ### Fase 4 - Soporte para Libros
 - [ ] Tabla separada `books` en la base de datos
@@ -275,6 +316,7 @@ Ver [LICENSE](LICENSE) para más detalles.
 ### Fase 5 - Características Avanzadas
 - [ ] Listas personalizadas y colecciones
 - [ ] Tema oscuro/claro
+- [ ] Cambio de idioma
 - ...
 
 ---

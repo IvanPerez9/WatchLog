@@ -10,23 +10,29 @@
  */
 
 import React from 'react';
-import { ELEMENT_STYLES } from '../styles/buttonStyles.js';
+import { ELEMENT_STYLES } from '../../styles/buttonStyles.js';
 
 const Stats = ({ movies, statuses, filterStatus = 'all', onFilterChange }) => {
   const handleClick = (statusId) => {
+    const statusIdString = statusId.toString();
     // Si hace click en el estado ya seleccionado, deselecciona (vuelve a todos)
-    if (filterStatus === statusId) {
+    if (filterStatus === statusIdString) {
       onFilterChange('all');
     } else {
-      onFilterChange(statusId);
+      onFilterChange(statusIdString);
     }
   };
 
+  // Determinar columnas dinámicamente basado en la cantidad de estados
+  const gridColsClass = statuses.length === 4 
+    ? 'grid-cols-2 md:grid-cols-4' 
+    : 'grid-cols-1 md:grid-cols-3';
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className={`grid ${gridColsClass} gap-4`}>
       {statuses.map((status) => {
         const count = movies.filter((m) => m.status_id === status.id).length;
-        const isSelected = filterStatus === status.id;
+        const isSelected = filterStatus === status.id.toString();
         
         return (
           <button
