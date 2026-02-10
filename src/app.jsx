@@ -242,9 +242,7 @@ const App = () => {
    */
   const loadStatuses = async () => {
     const data = await statusesApi.getAll();
-    // Filtrar estados "Viendo" y "Watching" (reservados para series en el futuro)
-    const filtered = data ? data.filter(s => s.description !== 'Viendo' && s.description !== 'Watching') : [];
-    setStatuses(filtered);
+    setStatuses(data || []);
   };
 
   /**
