@@ -29,7 +29,7 @@ export const StarRating = ({
             onClick={(e) => onStarClick(starNumber, e)}
             onMouseMove={(e) => onStarHover(starNumber, e)}
             onMouseLeave={onMouseLeave}
-            className={`transition transform ${
+            className={`transition transform flex-shrink-0 ${
               statusId !== 1 ? 'hover:scale-110 cursor-pointer' : 'cursor-not-allowed opacity-50'
             }`}
             disabled={statusId === 1}
@@ -39,14 +39,14 @@ export const StarRating = ({
                 : 'Left click for ½ star'
             }
           >
-            <div className="relative w-4 h-4">
-              <Star className="absolute w-4 h-4 text-slate-600" />
+            <div className="relative w-3.5 sm:w-4 h-3.5 sm:h-4">
+              <Star className="absolute w-3.5 sm:w-4 h-3.5 sm:h-4 text-slate-600" />
               
               {starNumber <= displayRating ? (
-                <Star className="absolute w-4 h-4 fill-yellow-400 text-yellow-400" />
+                <Star className="absolute w-3.5 sm:w-4 h-3.5 sm:h-4 fill-yellow-400 text-yellow-400" />
               ) : starNumber - 0.5 === displayRating ? (
-                <div className="absolute top-0 left-0 w-2 h-4 overflow-hidden">
-                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                <div className="absolute top-0 left-0 w-1.5 sm:w-2 h-3.5 sm:h-4 overflow-hidden">
+                  <Star className="w-3.5 sm:w-4 h-3.5 sm:h-4 fill-yellow-400 text-yellow-400" />
                 </div>
               ) : null}
             </div>

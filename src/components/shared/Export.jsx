@@ -16,21 +16,21 @@ const Export = ({ movies, onClose, viewMode = 'movies' }) => {
   const contentType = viewMode === 'movies' ? 'movies' : 'series';
   if (!movies || movies.length === 0) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-slate-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold text-white">Export Library</h2>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3">
+        <div className="bg-slate-800 rounded-lg shadow-lg p-4 sm:p-6 max-w-md w-full">
+          <div className="flex justify-between items-start sm:items-center mb-3 sm:mb-4 gap-4">
+            <h2 className="text-lg sm:text-2xl font-bold text-white">Export Library</h2>
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-white transition"
+              className="text-slate-400 hover:text-white transition flex-shrink-0"
             >
-              <X size={24} />
+              <X size={20} className="sm:w-6 sm:h-6" />
             </button>
           </div>
-          <p className="text-slate-300 mb-6">No {contentType} to export.</p>
+          <p className="text-slate-300 mb-4 sm:mb-6 text-sm sm:text-base">No {contentType} to export.</p>
           <button
             onClick={onClose}
-            className={BUTTON_STYLES.secondary}
+            className="px-3 sm:px-4 py-2 sm:py-3 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition text-sm sm:text-base w-full"
           >
             Close
           </button>
@@ -50,38 +50,38 @@ const Export = ({ movies, onClose, viewMode = 'movies' }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-slate-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-white">Export Library</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3">
+      <div className="bg-slate-800 rounded-lg shadow-lg p-4 sm:p-6 md:p-8 max-w-md w-full">
+        <div className="flex justify-between items-start sm:items-center mb-4 sm:mb-6 gap-4">
+          <h2 className="text-lg sm:text-2xl font-bold text-white">Export Library</h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white transition"
+            className="text-slate-400 hover:text-white transition flex-shrink-0"
           >
-            <X size={24} />
+            <X size={20} className="sm:w-6 sm:h-6" />
           </button>
         </div>
 
-        <p className="text-slate-300 mb-6">
+        <p className="text-slate-300 mb-4 sm:mb-6 text-sm sm:text-base">
           Export your {movies.length} {contentType}:
         </p>
 
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           {/* CSV Export */}
           <button
             onClick={handleExportCSV}
-            className={`${BUTTON_STYLES.primary} w-full flex items-center justify-center gap-2`}
+            className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center justify-center gap-2 transition text-sm sm:text-base font-semibold"
           >
-            <Download size={20} />
+            <Download size={18} className="sm:w-5 sm:h-5" />
             CSV
           </button>
 
           {/* JSON Export */}
           <button
             onClick={handleExportJSON}
-            className={`${BUTTON_STYLES.primary} w-full flex items-center justify-center gap-2`}
+            className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center justify-center gap-2 transition text-sm sm:text-base font-semibold"
           >
-            <Download size={20} />
+            <Download size={18} className="sm:w-5 sm:h-5" />
             JSON
           </button>
         </div>
