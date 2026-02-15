@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>WatchLog - Movie Tracker</title>
   
   <!-- Favicon -->
@@ -11,6 +10,33 @@
   
   <!-- Tailwind CSS desde CDN (como incluir Bootstrap) -->
   <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Custom styles for mobile optimization -->
+  <style>
+    body, html {
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    /* Prevent zoom on input focus for iOS */
+    input, select, textarea {
+      font-size: 16px !important;
+    }
+    
+    /* Smooth scrolling */
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    /* Prevent text selection issues on mobile */
+    button, input[type="button"], input[type="submit"] {
+      -webkit-user-select: none;
+      user-select: none;
+    }
+  </style>
 </head>
 <body>
   <!-- Este div es donde React "monta" toda la aplicación -->

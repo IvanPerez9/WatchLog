@@ -81,39 +81,39 @@ const MovieCard = ({ movie, statuses, onStatusChange, onDelete, onRatingChange, 
           className="w-full h-full flex items-center justify-center"
           style={{ display: posterUrl ? 'none' : 'flex' }}
         >
-          <Film className="w-16 h-16 text-slate-600" />
+          <Film className="w-8 sm:w-12 h-8 sm:h-12 text-slate-600" />
         </div>
 
         {/* Botón de eliminar (aparece al hover) */}
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-70 transition flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
           <button
             onClick={() => onDelete(movie.id)}
-            className="p-2 bg-red-600 hover:bg-red-700 rounded-full transition"
+            className="p-1.5 sm:p-2 bg-red-600 hover:bg-red-700 rounded-full transition"
             title="Delete movie"
           >
-            <Trash2 className="w-4 h-4 text-white" />
+            <Trash2 className="w-3 sm:w-4 h-3 sm:h-4 text-white" />
           </button>
         </div>
       </div>
 
       {/* Info */}
-      <div className="p-3">
+      <div className="p-2 sm:p-3">
         <h3 
-          className="text-white font-semibold text-sm mb-1 truncate" 
+          className="text-white font-semibold text-xs sm:text-sm mb-0.5 sm:mb-1 truncate" 
           title={movie.title}
         >
           {movie.title}
         </h3>
 
         {movie.year && (
-          <div className="text-slate-400 text-xs mb-2">{movie.year}</div>
+          <div className="text-slate-400 text-xs mb-1 sm:mb-2">{movie.year}</div>
         )}
 
         {/* Updated time */}
-        <p className="text-slate-500 text-xs mb-2">Updated {getRelativeTime(movie.updated_at)}</p>
+        <p className="text-slate-500 text-xs mb-1 sm:mb-2">Updated {getRelativeTime(movie.updated_at)}</p>
 
         {/* Rating with stars */}
-        <div className="mb-2 pb-2 border-b border-slate-700 min-h-[3rem]">
+        <div className="mb-1.5 sm:mb-2 pb-1.5 sm:pb-2 border-b border-slate-700 min-h-[2.5rem] sm:min-h-[3rem]">
           <StarRating
             rating={rating}
             hoverRating={hoverRating}
@@ -130,7 +130,7 @@ const MovieCard = ({ movie, statuses, onStatusChange, onDelete, onRatingChange, 
         <select
           value={movie.status_id}
           onChange={(e) => onStatusChange(movie.id, parseInt(e.target.value))}
-          className="w-full bg-slate-700 text-white text-xs px-2 py-1.5 rounded cursor-pointer hover:bg-slate-600 transition"
+          className="w-full bg-slate-700 text-white text-xs px-1.5 sm:px-2 py-1 sm:py-1.5 rounded cursor-pointer hover:bg-slate-600 transition"
         >
           {statuses.map((status) => (
             <option key={status.id} value={status.id}>

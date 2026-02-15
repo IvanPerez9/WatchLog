@@ -97,32 +97,32 @@ export const SeriesCard = ({ series, statuses, onDelete, onUpdate, onStatusChang
           className="w-full h-full flex items-center justify-center text-slate-600"
           style={{ display: posterUrl ? 'none' : 'flex' }}
         >
-          <span className="text-4xl">📺</span>
+          <span className="text-2xl sm:text-4xl">📺</span>
         </div>
 
         {/* Delete button (appears on hover) */}
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-70 transition flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
           <button
             onClick={() => onDelete(series.id)}
-            className="p-2 bg-red-600 hover:bg-red-700 rounded-full transition"
+            className="p-1.5 sm:p-2 bg-red-600 hover:bg-red-700 rounded-full transition"
             title="Delete series"
           >
-            <Trash2 className="w-4 h-4 text-white" />
+            <Trash2 className="w-3 sm:w-4 h-3 sm:h-4 text-white" />
           </button>
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-3">
+      <div className="p-2 sm:p-3">
         {/* Title & Year */}
-        <h3 className="text-white font-semibold text-sm mb-1 truncate" title={series.title}>{series.title}</h3>
-        <p className="text-xs text-slate-400 mb-2">{series.year || 'N/A'}</p>
+        <h3 className="text-white font-semibold text-xs sm:text-sm mb-0.5 sm:mb-1 truncate" title={series.title}>{series.title}</h3>
+        <p className="text-xs text-slate-400 mb-1 sm:mb-2">{series.year || 'N/A'}</p>
 
         {/* Updated time */}
-        <p className="text-slate-500 text-xs mb-2">Updated {getRelativeTime(series.updated_at)}</p>
+        <p className="text-slate-500 text-xs mb-1 sm:mb-2">Updated {getRelativeTime(series.updated_at)}</p>
 
         {/* Rating Stars - Interactive */}
-        <div className="mb-2 pb-2 border-b border-slate-700 min-h-[3rem]">
+        <div className="mb-1.5 sm:mb-2 pb-1.5 sm:pb-2 border-b border-slate-700 min-h-[2.5rem] sm:min-h-[3rem]">
           <StarRating
             rating={series.rating || 0}
             hoverRating={hoverRating}
@@ -139,10 +139,10 @@ export const SeriesCard = ({ series, statuses, onDelete, onUpdate, onStatusChang
         </div>
 
         {/* Progress Bar - Seasons Watched */}
-        <div className="mb-3 bg-slate-700 rounded p-2">
+        <div className="mb-2 sm:mb-3 bg-slate-700 rounded p-1.5 sm:p-2">
           <div className="flex justify-between items-center mb-1">
             <span className="text-xs font-semibold text-slate-300">
-              Season {editedData.current_season} of {series.total_seasons}
+              S{editedData.current_season}/{series.total_seasons}
             </span>
             <span className="text-xs text-slate-400">{Math.round(progressPercentage)}%</span>
           </div>
@@ -155,10 +155,10 @@ export const SeriesCard = ({ series, statuses, onDelete, onUpdate, onStatusChang
         </div>
 
         {/* Season Controls */}
-        <div className="mb-3 bg-slate-700 rounded p-2">
+        <div className="mb-2 sm:mb-3 bg-slate-700 rounded p-1.5 sm:p-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-300">Season</span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               <button
                 onClick={async () => {
                   if (editedData.current_season > 1) {
@@ -168,11 +168,11 @@ export const SeriesCard = ({ series, statuses, onDelete, onUpdate, onStatusChang
                   }
                 }}
                 disabled={editedData.current_season <= 1}
-                className="px-2 py-1 bg-slate-600 hover:bg-slate-500 disabled:bg-slate-800 disabled:opacity-50 text-white rounded text-xs font-bold transition"
+                className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-slate-600 hover:bg-slate-500 disabled:bg-slate-800 disabled:opacity-50 text-white rounded text-xs font-bold transition"
               >
                 −
               </button>
-              <span className="text-sm font-bold text-white min-w-8 text-center">
+              <span className="text-xs sm:text-sm font-bold text-white min-w-6 sm:min-w-8 text-center">
                 {editedData.current_season}/{series.total_seasons}
               </span>
               <button
@@ -184,7 +184,7 @@ export const SeriesCard = ({ series, statuses, onDelete, onUpdate, onStatusChang
                   }
                 }}
                 disabled={editedData.current_season >= series.total_seasons}
-                className="px-2 py-1 bg-purple-600 hover:bg-purple-500 disabled:bg-slate-800 disabled:opacity-50 text-white rounded text-xs font-bold transition"
+                className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-purple-600 hover:bg-purple-500 disabled:bg-slate-800 disabled:opacity-50 text-white rounded text-xs font-bold transition"
               >
                 +
               </button>
@@ -198,7 +198,7 @@ export const SeriesCard = ({ series, statuses, onDelete, onUpdate, onStatusChang
           <select
             value={series.status_id}
             onChange={(e) => onStatusChange(series.id, parseInt(e.target.value))}
-            className="w-full bg-slate-700 text-white text-xs px-2 py-1.5 rounded cursor-pointer hover:bg-slate-600 transition"
+            className="w-full bg-slate-700 text-white text-xs px-1.5 sm:px-2 py-1 sm:py-1.5 rounded cursor-pointer hover:bg-slate-600 transition"
           >
             {statuses?.map((status) => (
               <option key={status.id} value={status.id}>

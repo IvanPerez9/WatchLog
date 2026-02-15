@@ -11,7 +11,7 @@ import { tmdbApi } from './api/tmdb.js';
 import config from './config.js';
 import MovieCard from './components/movies/MovieCard.jsx';
 import { SeriesCard } from './components/series/SeriesCard.jsx';
-import AddMovieForm from './components/movies/AddMovieForm.jsx';
+import AddItemForm from './components/shared/AddItemForm.jsx';
 import Filters from './components/shared/Filters.jsx';
 import Stats from './components/shared/Stats.jsx';
 import Export from './components/shared/Export.jsx';
@@ -929,54 +929,57 @@ const App = () => {
   // Render de la UI - Siempre mostrar la app (sin pantalla de login al inicio)
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="container mx-auto px-3 py-4 sm:px-4 sm:py-6 md:px-4 md:py-8 max-w-7xl">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-4 mb-6 sm:mb-8">
+          {/* Title and Logo */}
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={() => {
                 // Reset everything to initial state
                 clearAllFilters();
                 setShowAddMovieModal(false);
               }}
-              className="flex items-center gap-3 hover:opacity-80 transition cursor-pointer group"
+              className="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition cursor-pointer group flex-shrink-0"
               title="Click to reset filters"
             >
-              <Film className="w-10 h-10 text-purple-400 group-hover:scale-110 transition" />
-              <h1 className="text-3xl sm:text-4xl font-bold text-white">WatchLog</h1>
+              <Film className="w-8 sm:w-10 h-8 sm:h-10 text-purple-400 group-hover:scale-110 transition flex-shrink-0" />
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">WatchLog</h1>
             </button>
 
             {/* View Mode Toggle */}
-            <div className="ml-8 flex gap-2">
+            <div className="ml-auto sm:ml-8 flex gap-1 sm:gap-2">
               <button
                 onClick={() => {
                   setViewMode('movies');
                   setCurrentPage(0);
                 }}
-                className={`px-3 py-2 rounded text-sm font-semibold flex items-center gap-1 transition ${
+                className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded text-xs sm:text-sm font-semibold flex items-center gap-1 transition whitespace-nowrap ${
                   viewMode === 'movies'
                     ? 'bg-purple-500 text-white'
                     : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                 }`}
               >
-                <Film size={16} /> Movies
+                <Film size={14} className="hidden sm:block" /> Movies
               </button>
               <button
                 onClick={() => {
                   setViewMode('series');
                   setCurrentPage(0);
                 }}
-                className={`px-3 py-2 rounded text-sm font-semibold flex items-center gap-1 transition ${
+                className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded text-xs sm:text-sm font-semibold flex items-center gap-1 transition whitespace-nowrap ${
                   viewMode === 'series'
                     ? 'bg-purple-500 text-white'
                     : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                 }`}
               >
-                <Tv size={16} /> Series
+                <Tv size={14} className="hidden sm:block" /> Series
               </button>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-2 w-full">
             <button
               onClick={() => {
                 if (viewMode === 'movies') {
@@ -989,14 +992,14 @@ const App = () => {
                 }
               }}
               disabled={viewMode === 'series'}
-              className={`${BUTTON_STYLES.primary_sm} flex-1 sm:flex-none text-sm ${viewMode === 'series' ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`px-3 py-2 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-xs sm:text-sm font-semibold flex-1 sm:flex-none whitespace-nowrap ${viewMode === 'series' ? 'opacity-50 cursor-not-allowed' : ''}`}
               title="Completa poster, año, director y géneros desde TMDB"
             >
-              🔍 Complete TMDB
+              🔍 Complete
             </button>
             <button
               onClick={() => setShowExportModal(true)}
-              className={`${BUTTON_STYLES.primary_sm} flex-1 sm:flex-none text-sm`}
+              className={`px-3 py-2 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-xs sm:text-sm font-semibold flex-1 sm:flex-none whitespace-nowrap`}
               title={`Exporta tu ${viewMode === 'movies' ? 'librería de películas' : 'librería de series'}`}
             >
               💾 Export
@@ -1010,14 +1013,14 @@ const App = () => {
                   setShowAddMovieModal(true);
                 }
               }}
-              className={`${BUTTON_STYLES.primary_sm} flex-1 sm:flex-none text-sm`}
+              className={`px-3 py-2 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-xs sm:text-sm font-semibold flex-1 sm:flex-none whitespace-nowrap`}
             >
-              ➕ Add {viewMode === 'movies' ? 'Movie' : 'Series'}
+              ➕ Add
             </button>
             {user && (
               <button
                 onClick={logout}
-                className={`${BUTTON_STYLES.danger} flex-1 sm:flex-none text-sm`}
+                className={`px-3 py-2 sm:px-4 sm:py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition text-xs sm:text-sm font-semibold flex-1 sm:flex-none whitespace-nowrap`}
               >
                 Logout
               </button>
@@ -1026,7 +1029,7 @@ const App = () => {
         </div>
 
         {/* Filtros */}
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <Filters
             searchTerm={searchTerm}
             onSearchChange={(term) => {
@@ -1049,7 +1052,7 @@ const App = () => {
         </div>
 
         {/* Estadísticas */}
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <Stats 
             movies={viewMode === 'movies' ? allMovies : allSeries} 
             statuses={viewMode === 'movies' ? statuses.filter(s => s.description !== 'Watching') : statuses}
@@ -1060,8 +1063,8 @@ const App = () => {
 
         {/* Status de completar datos TMDB */}
         {fillingTMDB && (
-          <div className="bg-slate-800 rounded-lg p-4 mb-6 border border-blue-500">
-            <p className="text-white text-sm">{tmdbFillStatus}</p>
+          <div className="bg-slate-800 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 border border-blue-500">
+            <p className="text-white text-xs sm:text-sm">{tmdbFillStatus}</p>
           </div>
         )}
 
@@ -1069,12 +1072,12 @@ const App = () => {
         {loading ? (
           <LoadingSpinner />
         ) : displayList.length === 0 ? (
-          <div className="text-center text-slate-400 py-12">
+          <div className="text-center text-slate-400 py-8 sm:py-12 text-sm sm:text-base">
             No {viewMode === 'movies' ? 'movies' : 'series'} to show
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
               {displayList.map((item) => (
                 <div key={`${viewMode}-${item.id}`}>
                   {viewMode === 'movies' ? (
@@ -1102,23 +1105,23 @@ const App = () => {
             </div>
 
             {/* Controles de paginación */}
-            <div className="mt-8 flex items-center justify-center gap-4">
+            <div className="mt-6 sm:mt-8 flex items-center justify-center gap-2 sm:gap-4 flex-wrap">
               <button
                 onClick={handlePrevPage}
                 disabled={currentPage === 0}
-                className={BUTTON_STYLES.secondary_lg}
+                className={`px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-base ${BUTTON_STYLES.secondary_lg}`}
               >
-                ← Previous
+                ← Prev
               </button>
               
-              <span className="text-white">
+              <span className="text-sm sm:text-base text-white whitespace-nowrap">
                 Page {currentPage + 1} of {displayTotal || 1}
               </span>
               
               <button
                 onClick={handleNextPage}
                 disabled={currentPage >= displayTotal - 1}
-                className={BUTTON_STYLES.secondary_lg}
+                className={`px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-base ${BUTTON_STYLES.secondary_lg}`}
               >
                 Next →
               </button>
@@ -1142,35 +1145,37 @@ const App = () => {
 
       {/* Add Movie/Series Modal */}
       {showAddMovieModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-lg p-8 w-full max-w-md">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-white text-xl font-semibold">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-3 sm:p-6">
+          <div className="bg-slate-800 rounded-lg p-4 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4 sm:mb-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-white">
                 Add New {viewMode === 'movies' ? 'Movie' : 'Series'}
               </h2>
               <button
                 onClick={() => setShowAddMovieModal(false)}
-                className="text-slate-400 hover:text-white transition"
+                className="text-slate-400 hover:text-white transition flex-shrink-0"
               >
-                <X size={24} />
+                <X size={20} />
               </button>
             </div>
             
             <div>
               {viewMode === 'movies' ? (
-                <AddMovieForm 
+                <AddItemForm 
                   onAdd={(title) => {
                     handleAddMovie(title);
                     setShowAddMovieModal(false);
                   }}
+                  isInModal={true}
                 />
               ) : (
-                <AddMovieForm 
+                <AddItemForm 
                   onAdd={(title) => {
                     handleAddSeries(title);
                     setShowAddMovieModal(false);
                   }}
                   placeholder="Series title..."
+                  isInModal={true}
                 />
               )}
             </div>

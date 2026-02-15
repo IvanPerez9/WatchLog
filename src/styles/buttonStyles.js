@@ -7,14 +7,14 @@
  */
 
 export const BUTTON_STYLES = {
-  primary: 'px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition',
-  primary_sm: 'px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-sm',
-  primary_lg: 'flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-semibold',
+  primary: 'px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-sm sm:text-base',
+  primary_sm: 'px-3 py-2 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-xs sm:text-sm',
+  primary_lg: 'flex-1 px-3 py-2 sm:px-4 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-semibold text-sm sm:text-base',
 
-  secondary: 'px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition',
-  secondary_lg: 'px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition',
+  secondary: 'px-3 py-2 sm:px-4 sm:py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition text-sm',
+  secondary_lg: 'px-4 py-2 sm:px-6 sm:py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition text-sm sm:text-base',
 
-  danger: 'px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition text-sm',
+  danger: 'px-3 py-2 sm:px-4 sm:py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition text-xs sm:text-sm',
   danger_icon: 'p-2 bg-red-600 hover:bg-red-700 rounded-full transition',
 
   selected: 'bg-blue-600 border-2 border-blue-400',
