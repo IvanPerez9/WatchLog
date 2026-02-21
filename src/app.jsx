@@ -239,10 +239,16 @@ const App = () => {
 
   /**
    * Cargar estados desde Supabase
+   * Filtra los estados que son solo para books (Reading, Read)
+   * para que no aparezcan en películas y series
    */
   const loadStatuses = async () => {
     const data = await statusesApi.getAll();
-    setStatuses(data || []);
+    // Excluir estados solo para books
+    const filteredStatuses = data?.filter(status => 
+      !['Reading', 'Read'].includes(status.description)
+    ) || [];
+    setStatuses(filteredStatuses);
   };
 
   /**
