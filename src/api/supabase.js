@@ -248,3 +248,92 @@ export const statusesApi = {
     return supabaseFetch('status?select=*');
   },
 };
+
+/**
+ * API de Books - CRUD completo (Phase 4)
+ */
+export const booksApi = {
+  /**
+   * GET /books - Listar libros con paginación (sin token requerido)
+   */
+  getAll: async (page = 0, pageSize = 20, statusId = null) => {
+    const from = page * pageSize;
+    const to = from + pageSize - 1;
+    
+    // Construir query base con JOIN a status
+    let query = `books?select=id,title,author,year,isbn,cover_path,status_id,rating,genres,total_pages,updated_at,status!inner(description)&order=updated_at.desc,id.desc`;
+    
+    // Añadir filtro por status si es necesario
+    if (statusId !== null) {
+      query += `&status_id=eq.${statusId}`;
+    }
+    
+    try {
+      const result = await supabaseFetch(query, {
+        headers: {
+          'Range': `${from}-${to}`,
+        }
+      });
+      
+      return result;
+    } catch (error) {
+      console.error('❌ Error en getAll books:', error);
+      return [];
+    }
+  },
+
+  /**
+   * GET /books - Contar total de libros (para paginación)
+   */
+  count: async (statusId = null) => {
+    let query = 'books?select=count';
+    
+    if (statusId !== null) {
+      query += `&status_id=eq.${statusId}`;
+    }
+    
+    const result = await supabaseFetch(query, {
+      headers: {
+        'Prefer': 'count=exact',
+      }
+    });
+    
+    return result;
+  },
+
+  /**
+   * POST /books - Crear un libro
+   * @param {Object} book - {title, author, year, isbn, cover_path, genres, total_pages, status_id, rating}
+   * @param {string} token - Token de autenticación
+   */
+  create: async (book, token) => {
+    return supabaseFetch('books', {
+      method: 'POST',
+      body: JSON.stringify(book),
+    }, token);
+  },
+
+  /**
+   * PATCH /books?id=eq.{id} - Actualizar un libro
+   * @param {number} id - ID del libro
+   * @param {Object} updates - Campos a actualizar
+   * @param {string} token - Token de autenticación
+   */
+  update: async (id, updates, token) => {
+    return supabaseFetch(`books?id=eq.${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updates),
+    }, token);
+  },
+
+  /**
+   * DELETE /books?id=eq.{id} - Eliminar un libro
+   * @param {number} id - ID del libro
+   * @param {string} token - Token de autenticación
+   */
+  delete: async (id, token) => {
+    return supabaseFetch(`books?id=eq.${id}`, {
+      method: 'DELETE',
+    }, token);
+  },
+};
