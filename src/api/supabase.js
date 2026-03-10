@@ -238,73 +238,48 @@ export const seriesApi = {
 };
 
 /**
- * API de Status - Solo lectura
- */
-export const statusesApi = {
-  /**
-   * GET /status - Listar todos los estados
-   */
-  getAll: async () => {
-    return supabaseFetch('status?select=*');
-  },
-};
-
-/**
  * API de Books - CRUD completo (Phase 4)
  */
 export const booksApi = {
   /**
-   * GET /books - Listar libros con paginación (sin token requerido)
+   * GET /books - Listar libros con paginación
    */
   getAll: async (page = 0, pageSize = 20, statusId = null) => {
     const from = page * pageSize;
     const to = from + pageSize - 1;
-    
-    // Construir query base con JOIN a status
-    let query = `books?select=id,title,author,year,isbn,cover_path,status_id,rating,genres,total_pages,updated_at,status!inner(description)&order=updated_at.desc,id.desc`;
-    
-    // Añadir filtro por status si es necesario
+
+    let query = `books?select=id,title,author,year,cover_path,status_id,rating,genres,pages,updated_at,status!inner(description)&order=updated_at.desc,id.desc`;
+
     if (statusId !== null) {
       query += `&status_id=eq.${statusId}`;
     }
-    
+
     try {
       const result = await supabaseFetch(query, {
-        headers: {
-          'Range': `${from}-${to}`,
-        }
+        headers: { 'Range': `${from}-${to}` }
       });
-      
       return result;
     } catch (error) {
-      console.error('❌ Error en getAll books:', error);
+      console.error('❌ Error en booksApi.getAll:', error);
       return [];
     }
   },
 
   /**
-   * GET /books - Contar total de libros (para paginación)
+   * GET /books - Contar total de libros
    */
   count: async (statusId = null) => {
     let query = 'books?select=count';
-    
     if (statusId !== null) {
       query += `&status_id=eq.${statusId}`;
     }
-    
-    const result = await supabaseFetch(query, {
-      headers: {
-        'Prefer': 'count=exact',
-      }
+    return supabaseFetch(query, {
+      headers: { 'Prefer': 'count=exact' }
     });
-    
-    return result;
   },
 
   /**
    * POST /books - Crear un libro
-   * @param {Object} book - {title, author, year, isbn, cover_path, genres, total_pages, status_id, rating}
-   * @param {string} token - Token de autenticación
    */
   create: async (book, token) => {
     return supabaseFetch('books', {
@@ -315,9 +290,6 @@ export const booksApi = {
 
   /**
    * PATCH /books?id=eq.{id} - Actualizar un libro
-   * @param {number} id - ID del libro
-   * @param {Object} updates - Campos a actualizar
-   * @param {string} token - Token de autenticación
    */
   update: async (id, updates, token) => {
     return supabaseFetch(`books?id=eq.${id}`, {
@@ -328,12 +300,22 @@ export const booksApi = {
 
   /**
    * DELETE /books?id=eq.{id} - Eliminar un libro
-   * @param {number} id - ID del libro
-   * @param {string} token - Token de autenticación
    */
   delete: async (id, token) => {
     return supabaseFetch(`books?id=eq.${id}`, {
       method: 'DELETE',
     }, token);
+  },
+};
+
+/**
+ * API de Status - Solo lectura
+ */
+export const statusesApi = {
+  /**
+   * GET /status - Listar todos los estados
+   */
+  getAll: async () => {
+    return supabaseFetch('status?select=*');
   },
 };
