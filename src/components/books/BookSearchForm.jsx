@@ -10,7 +10,7 @@
 
 import React, { useState } from 'react';
 import { Search, Loader, X, BookOpen } from 'lucide-react';
-import { openlibraryApi } from '../../api/openlibrary.js';
+import { googleBooksApi } from '../../api/googlebooks.js';
 import { booksApi } from '../../api/supabase.js';
 import LoadingSpinner from '../common/LoadingSpinner.jsx';
 
@@ -34,12 +34,12 @@ const BookSearchForm = ({ onAddBook, statuses, user }) => {
       let results = [];
       
       if (searchType === 'title') {
-        results = await openlibraryApi.searchByTitle(searchQuery, 10);
+        results = await googleBooksApi.searchByTitle(searchQuery, 10);
       } else if (searchType === 'author') {
-        results = await openlibraryApi.searchByAuthor(searchQuery, 10);
+        results = await googleBooksApi.searchByAuthor(searchQuery, 10);
       } else if (searchType === 'isbn') {
-        if (openlibraryApi.isValidIsbn(searchQuery)) {
-          results = await openlibraryApi.searchByIsbn(searchQuery);
+        if (googleBooksApi.isValidIsbn(searchQuery)) {
+          results = await googleBooksApi.searchByIsbn(searchQuery);
         } else {
           alert('ISBN no válido. Intenta con un ISBN de 10 o 13 dígitos.');
         }

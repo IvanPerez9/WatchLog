@@ -14,8 +14,6 @@
 
 import React from 'react';
 import { Trash2 } from 'lucide-react';
-import { openlibraryApi } from '../../api/openlibrary.js';
-import { getRatingText } from '../../utils/ratingUtils.js';
 import { getRelativeTime } from '../../utils/dateUtils.js';
 import { StarRating } from '../common/StarRating.jsx';
 
@@ -23,12 +21,7 @@ const BookCard = ({ book, bookStatuses, onStatusChange, onDelete, onRatingChange
   const [hoverRating, setHoverRating] = React.useState(0);
   const rating = book.rating || 0;
 
-  // cover_path puede ser un ID numérico de Open Library o una URL completa
-  const coverUrl = book.cover_path
-    ? (isNaN(book.cover_path)
-        ? book.cover_path
-        : openlibraryApi.getCoverUrl(book.cover_path, 'M'))
-    : null;
+  const coverUrl = book.cover_path || null;
 
   // Encontrar el status "Pending" para bloquear el rating
   const pendingStatus = bookStatuses?.find(s => s.description === 'Pending');

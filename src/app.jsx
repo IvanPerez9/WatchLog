@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import { Film, Tv, BookOpen, X } from 'lucide-react';
 import { moviesApi, seriesApi, booksApi, statusesApi } from './api/supabase.js';
-import { openlibraryApi } from './api/openlibrary.js';
+import { googleBooksApi } from './api/googlebooks.js';
 import { tmdbApi } from './api/tmdb.js';
 import config from './config.js';
 import MovieCard from './components/movies/MovieCard.jsx';
@@ -893,13 +893,12 @@ const App = () => {
 
       setAllBooks((prev) => [tempBook, ...prev]);
 
-      // Buscar en Open Library en background
+      // Buscar en Google Books en background
       let bookData = {};
       try {
-        const results = await openlibraryApi.searchByTitle(title, 5);
-        bookData = results?.[0] || {};
+        bookData = (await googleBooksApi.searchByTitle(title))?.[0] || {};
       } catch (err) {
-        console.warn('Open Library search failed:', err);
+        console.warn('Google Books search failed:', err);
       }
 
       // Actualizar entrada temporal con datos encontrados
@@ -911,10 +910,8 @@ const App = () => {
                 author: bookData.author || null,
                 year: bookData.year || null,
                 cover_path: bookData.cover_path || null,
-                genres: bookData.genres
-                  ? JSON.stringify(bookData.genres.split(', ').filter(Boolean))
-                  : null,
-                pages: bookData.total_pages || null,
+                genres: bookData.genres || null,
+                total_pages: bookData.total_pages || null,
               }
             : b
         )
@@ -926,10 +923,8 @@ const App = () => {
         author: bookData.author || null,
         year: bookData.year || null,
         cover_path: bookData.cover_path || null,
-        genres: bookData.genres
-          ? JSON.stringify(bookData.genres.split(', ').filter(Boolean))
-          : null,
-        pages: bookData.total_pages || null,
+        genres: bookData.genres || null,
+        total_pages: bookData.total_pages || null,
         status_id: pendingStatus?.id || bookStatuses[0]?.id || 1,
       }, user.token);
 

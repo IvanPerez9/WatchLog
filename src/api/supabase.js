@@ -248,7 +248,7 @@ export const booksApi = {
     const from = page * pageSize;
     const to = from + pageSize - 1;
 
-    let query = `books?select=id,title,author,year,cover_path,status_id,rating,genres,pages,updated_at,status!inner(description)&order=updated_at.desc,id.desc`;
+    let query = `books?select=id,title,author,year,cover_path,status_id,rating,genres,total_pages,updated_at,status!inner(description)&order=updated_at.desc,id.desc`;
 
     if (statusId !== null) {
       query += `&status_id=eq.${statusId}`;
