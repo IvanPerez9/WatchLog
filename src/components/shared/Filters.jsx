@@ -1,6 +1,29 @@
 import React from 'react';
 import { Search, Star, Film, X } from 'lucide-react';
 
+const SEARCH_HINTS = {
+  movies: [
+    { label: 'Title', example: 'Interstellar' },
+    { label: 'Director', example: 'Nolan' },
+    { label: 'Year', example: '2014' },
+  ],
+  series: [
+    { label: 'Title', example: 'Breaking Bad' },
+    { label: 'Year', example: '2008' },
+  ],
+  books: [
+    { label: 'Title', example: 'Don Quixote' },
+    { label: 'Author', example: 'Cervantes' },
+    { label: 'ISBN', example: '978-...' },
+  ],
+};
+
+const SEARCH_PLACEHOLDERS = {
+  movies: 'Search by title, director or year...',
+  series: 'Search by title or year...',
+  books: 'Search by title, author or ISBN...',
+};
+
 const Filters = ({ 
   searchTerm, 
   onSearchChange,
@@ -11,28 +34,45 @@ const Filters = ({
   genres = [],
   viewMode = 'movies'
 }) => {
+  const hints = SEARCH_HINTS[viewMode] || SEARCH_HINTS.movies;
+
   return (
     <div className="bg-slate-800 rounded-lg p-3 sm:p-4 md:p-6">
       <div className="flex flex-col gap-3 sm:gap-4">
         {/* First row: Search */}
-        <div className="relative flex-1 w-full">
-          <Search className="absolute left-3 top-2.5 sm:top-3.5 w-4 sm:w-5 h-4 sm:h-5 text-slate-400 flex-shrink-0" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder={`Search ${viewMode}...`}
-            className="w-full bg-slate-700 text-white pl-9 sm:pl-10 pr-9 sm:pr-10 py-2 sm:py-3 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-sm sm:text-base"
-          />
-          {searchTerm && (
-            <button
-              onClick={() => onSearchChange('')}
-              className="absolute right-3 top-2.5 sm:top-3.5 text-slate-400 hover:text-white transition flex-shrink-0"
-              title="Clear search"
-            >
-              <X className="w-4 sm:w-5 h-4 sm:h-5" />
-            </button>
-          )}
+        <div className="flex flex-col gap-1.5">
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-3 top-2.5 sm:top-3.5 w-4 sm:w-5 h-4 sm:h-5 text-slate-400 flex-shrink-0" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => onSearchChange(e.target.value)}
+              placeholder={SEARCH_PLACEHOLDERS[viewMode]}
+              className="w-full bg-slate-700 text-white pl-9 sm:pl-10 pr-9 sm:pr-10 py-2 sm:py-3 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-sm sm:text-base"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => onSearchChange('')}
+                className="absolute right-3 top-2.5 sm:top-3.5 text-slate-400 hover:text-white transition flex-shrink-0"
+                title="Clear search"
+              >
+                <X className="w-4 sm:w-5 h-4 sm:h-5" />
+              </button>
+            )}
+          </div>
+          {/* Search hints */}
+          <div className="flex items-center gap-1.5 flex-wrap px-1">
+            <span className="text-slate-500 text-xs">Search by:</span>
+            {hints.map((hint, i) => (
+              <span
+                key={i}
+                className="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full"
+                title={`Ej: ${hint.example}`}
+              >
+                {hint.label}
+              </span>
+            ))}
+          </div>
         </div>
 
         {/* Second row: Filters */}

@@ -368,24 +368,24 @@ const App = () => {
    */
   const fillMissingTMDBData = async (moviesToProcess) => {
     setFillingTMDB(true);
-    setTMDBFillStatus('Preparando búsqueda...');
+    setTMDBFillStatus('Preparing search...');
     
     const moviesWithMissingData = moviesToProcess
       .filter((m) => !m.poster_path || !m.year || !m.director || !m.genres)
       .sort((a, b) => b.id - a.id);
     
     if (moviesWithMissingData.length === 0) {
-      setTMDBFillStatus('✅ Toda la información está completa');
+      setTMDBFillStatus('✅ All information is complete');
       setFillingTMDB(false);
       return;
     }
 
-    setTMDBFillStatus(`🎬 Encontradas ${moviesWithMissingData.length} películas incompletas. Iniciando búsqueda...`);
+    setTMDBFillStatus(`🎬 Found ${moviesWithMissingData.length} incomplete movies. Starting search...`);
 
     let updated = 0;
     for (const movie of moviesWithMissingData) {
       try {
-        setTMDBFillStatus(`⏳ Buscando información: ${movie.title}...`);
+        setTMDBFillStatus(`⏳ Fetching info: ${movie.title}...`);
         
         const tmdbData = await tmdbApi.searchMovie(movie.title);
 
@@ -411,20 +411,20 @@ const App = () => {
           if (Object.keys(updates).length > 0) {
             await moviesApi.update(movie.id, updates, user.token);
             updated++;
-            setTMDBFillStatus(`✅ ${updated}/${moviesWithMissingData.length} películas actualizadas`);
+            setTMDBFillStatus(`✅ ${updated}/${moviesWithMissingData.length} movies updated`);
           }
         } else {
-          setTMDBFillStatus(`⚠️ Sin información: ${movie.title}`);
+          setTMDBFillStatus(`⚠️ No info found: ${movie.title}`);
         }
 
         await new Promise((resolve) => setTimeout(resolve, 500));
       } catch (error) {
-        console.error(`Error procesando ${movie.title}:`, error);
-        setTMDBFillStatus(`❌ Error en: ${movie.title}`);
+        console.error(`Error processing ${movie.title}:`, error);
+        setTMDBFillStatus(`❌ Error on: ${movie.title}`);
       }
     }
 
-    setTMDBFillStatus(`🎉 ¡Completado! ${updated} películas actualizadas`);
+    setTMDBFillStatus(`🎉 Done! ${updated} movies updated`);
     await loadAllMovies();
     setFillingTMDB(false);
   };
@@ -434,26 +434,26 @@ const App = () => {
    */
   const fillMissingIsbnData = async (booksToProcess) => {
     setFillingIsbn(true);
-    setIsbnFillStatus('Preparando búsqueda...');
+    setIsbnFillStatus('Preparing search...');
 
     const booksWithoutIsbn = booksToProcess.filter(b => !b.isbn);
 
     if (booksWithoutIsbn.length === 0) {
-      setIsbnFillStatus('✅ Todos los libros ya tienen ISBN');
+      setIsbnFillStatus('✅ All books already have an ISBN');
       setFillingIsbn(false);
       return;
     }
 
-    setIsbnFillStatus(`📚 ${booksWithoutIsbn.length} libros sin ISBN. Iniciando búsqueda...`);
+    setIsbnFillStatus(`📚 ${booksWithoutIsbn.length} books without ISBN. Starting search...`);
 
     let updated = 0;
     for (const book of booksWithoutIsbn) {
       try {
-        setIsbnFillStatus(`⏳ Buscando ISBN: ${book.title}...`);
+        setIsbnFillStatus(`⏳ Looking up ISBN: ${book.title}...`);
 
         const results = await googleBooksApi.searchByTitle(book.title, 5);
 
-        // Intentar encontrar el libro del mismo autor primero
+        // Try to match by author first for better accuracy
         const match =
           results.find(r =>
             r.isbn &&
@@ -465,19 +465,19 @@ const App = () => {
         if (match?.isbn) {
           await booksApi.update(book.id, { isbn: match.isbn }, user.token);
           updated++;
-          setIsbnFillStatus(`✅ ${updated}/${booksWithoutIsbn.length} ISBNs actualizados`);
+          setIsbnFillStatus(`✅ ${updated}/${booksWithoutIsbn.length} ISBNs updated`);
         } else {
-          setIsbnFillStatus(`⚠️ Sin ISBN encontrado: ${book.title}`);
+          setIsbnFillStatus(`⚠️ No ISBN found: ${book.title}`);
         }
 
         await new Promise(resolve => setTimeout(resolve, 500));
       } catch (error) {
-        console.error(`Error procesando ${book.title}:`, error);
-        setIsbnFillStatus(`❌ Error en: ${book.title}`);
+        console.error(`Error processing ${book.title}:`, error);
+        setIsbnFillStatus(`❌ Error on: ${book.title}`);
       }
     }
 
-    setIsbnFillStatus(`🎉 ¡Completado! ${updated} ISBNs actualizados`);
+    setIsbnFillStatus(`🎉 Done! ${updated} ISBNs updated`);
     await loadAllBooks();
     setFillingIsbn(false);
   };
@@ -1185,12 +1185,14 @@ const App = () => {
   const searchedBooks = allBooks.filter((book) => {
     const title = book.title || '';
     const author = book.author || '';
+    const isbn = book.isbn || '';
     const searchLower = searchTerm.toLowerCase().trim();
     const matchesTitle = title.toLowerCase().includes(searchLower);
     const matchesAuthor = searchLower && author.toLowerCase().includes(searchLower);
+    const matchesIsbn = searchLower && isbn.replace(/[-\s]/g, '').includes(searchLower.replace(/[-\s]/g, ''));
     const matchesRating = !minRating || (book.rating && book.rating >= minRating);
     const matchesStatus = filterStatus === 'all' ? true : book.status_id === parseInt(filterStatus);
-    return (matchesTitle || matchesAuthor) && matchesRating && matchesStatus;
+    return (matchesTitle || matchesAuthor || matchesIsbn) && matchesRating && matchesStatus;
   });
 
   // Aplicar paginación al resultado de búsqueda de books
@@ -1318,7 +1320,7 @@ const App = () => {
               }}
               disabled={viewMode === 'series'}
               className={`px-3 py-2 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-xs sm:text-sm font-semibold flex-1 sm:flex-none whitespace-nowrap ${viewMode === 'series' ? 'opacity-50 cursor-not-allowed' : ''}`}
-              title={viewMode === 'movies' ? 'Completa poster, año, director y géneros desde TMDB' : 'Completa ISBNs desde Google Books'}
+              title={viewMode === 'movies' ? 'Fill poster, year, director and genres from TMDB' : 'Fill missing ISBNs from Google Books'}
             >
               🔍 Complete
             </button>
