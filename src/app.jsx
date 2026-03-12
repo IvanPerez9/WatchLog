@@ -63,6 +63,8 @@ const App = () => {
   const [shouldOpenAddMovieAfterLogin, setShouldOpenAddMovieAfterLogin] = useState(false);
   const [fillingTMDB, setFillingTMDB] = useState(false);
   const [tmdbFillStatus, setTMDBFillStatus] = useState('');
+  const [fillingIsbn, setFillingIsbn] = useState(false);
+  const [isbnFillStatus, setIsbnFillStatus] = useState('');
   
   // Genre filter
   const [genres, setGenres] = useState([]);
@@ -425,6 +427,59 @@ const App = () => {
     setTMDBFillStatus(`🎉 ¡Completado! ${updated} películas actualizadas`);
     await loadAllMovies();
     setFillingTMDB(false);
+  };
+
+  /**
+   * Busca y rellena ISBNs que faltan en libros ya guardados usando Google Books
+   */
+  const fillMissingIsbnData = async (booksToProcess) => {
+    setFillingIsbn(true);
+    setIsbnFillStatus('Preparando búsqueda...');
+
+    const booksWithoutIsbn = booksToProcess.filter(b => !b.isbn);
+
+    if (booksWithoutIsbn.length === 0) {
+      setIsbnFillStatus('✅ Todos los libros ya tienen ISBN');
+      setFillingIsbn(false);
+      return;
+    }
+
+    setIsbnFillStatus(`📚 ${booksWithoutIsbn.length} libros sin ISBN. Iniciando búsqueda...`);
+
+    let updated = 0;
+    for (const book of booksWithoutIsbn) {
+      try {
+        setIsbnFillStatus(`⏳ Buscando ISBN: ${book.title}...`);
+
+        const results = await googleBooksApi.searchByTitle(book.title, 5);
+
+        // Intentar encontrar el libro del mismo autor primero
+        const match =
+          results.find(r =>
+            r.isbn &&
+            book.author &&
+            r.author &&
+            r.author.toLowerCase().includes(book.author.toLowerCase().split(' ')[0])
+          ) || results.find(r => r.isbn);
+
+        if (match?.isbn) {
+          await booksApi.update(book.id, { isbn: match.isbn }, user.token);
+          updated++;
+          setIsbnFillStatus(`✅ ${updated}/${booksWithoutIsbn.length} ISBNs actualizados`);
+        } else {
+          setIsbnFillStatus(`⚠️ Sin ISBN encontrado: ${book.title}`);
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } catch (error) {
+        console.error(`Error procesando ${book.title}:`, error);
+        setIsbnFillStatus(`❌ Error en: ${book.title}`);
+      }
+    }
+
+    setIsbnFillStatus(`🎉 ¡Completado! ${updated} ISBNs actualizados`);
+    await loadAllBooks();
+    setFillingIsbn(false);
   };
 
   /**
@@ -1252,11 +1307,18 @@ const App = () => {
                   } else {
                     fillMissingTMDBData(allMovies);
                   }
+                } else if (viewMode === 'books') {
+                  if (!user) {
+                    setPendingAction(() => () => fillMissingIsbnData(allBooks));
+                    setShowLoginModal(true);
+                  } else {
+                    fillMissingIsbnData(allBooks);
+                  }
                 }
               }}
-              disabled={viewMode !== 'movies'}
-              className={`px-3 py-2 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-xs sm:text-sm font-semibold flex-1 sm:flex-none whitespace-nowrap ${viewMode !== 'movies' ? 'opacity-50 cursor-not-allowed' : ''}`}
-              title="Completa poster, año, director y géneros desde TMDB"
+              disabled={viewMode === 'series'}
+              className={`px-3 py-2 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-xs sm:text-sm font-semibold flex-1 sm:flex-none whitespace-nowrap ${viewMode === 'series' ? 'opacity-50 cursor-not-allowed' : ''}`}
+              title={viewMode === 'movies' ? 'Completa poster, año, director y géneros desde TMDB' : 'Completa ISBNs desde Google Books'}
             >
               🔍 Complete
             </button>
@@ -1334,6 +1396,13 @@ const App = () => {
         {fillingTMDB && (
           <div className="bg-slate-800 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 border border-blue-500">
             <p className="text-white text-xs sm:text-sm">{tmdbFillStatus}</p>
+          </div>
+        )}
+
+        {/* Status de completar ISBNs */}
+        {fillingIsbn && (
+          <div className="bg-slate-800 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 border border-blue-500">
+            <p className="text-white text-xs sm:text-sm">{isbnFillStatus}</p>
           </div>
         )}
 

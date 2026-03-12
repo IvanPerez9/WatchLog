@@ -248,7 +248,7 @@ export const booksApi = {
     const from = page * pageSize;
     const to = from + pageSize - 1;
 
-    let query = `books?select=id,title,author,year,cover_path,status_id,rating,genres,total_pages,updated_at,status!inner(description)&order=updated_at.desc,id.desc`;
+    let query = `books?select=id,title,author,year,isbn,cover_path,status_id,rating,genres,total_pages,updated_at,status!inner(description)&order=updated_at.desc,id.desc`;
 
     if (statusId !== null) {
       query += `&status_id=eq.${statusId}`;
@@ -305,6 +305,22 @@ export const booksApi = {
     return supabaseFetch(`books?id=eq.${id}`, {
       method: 'DELETE',
     }, token);
+  },
+
+  /**
+   * GET /books?isbn=eq.{isbn} - Buscar un libro por ISBN en la biblioteca
+   */
+  searchByIsbn: async (isbn) => {
+    const clean = isbn.replace(/[-\s]/g, '');
+    try {
+      const result = await supabaseFetch(
+        `books?isbn=eq.${encodeURIComponent(clean)}&select=id,title,author,year,isbn,cover_path,status_id,rating,genres,total_pages,updated_at,status!inner(description)`
+      );
+      return result;
+    } catch (error) {
+      console.error('❌ Error en booksApi.searchByIsbn:', error);
+      return [];
+    }
   },
 };
 
