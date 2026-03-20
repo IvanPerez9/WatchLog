@@ -13,7 +13,7 @@ import { exportToCSV, exportToJSON } from '../../utils/exportUtils.js';
 import { BUTTON_STYLES } from '../../styles/buttonStyles.js';
 
 const Export = ({ movies, onClose, viewMode = 'movies' }) => {
-  const contentType = viewMode === 'movies' ? 'movies' : 'series';
+  const contentType = viewMode === 'movies' ? 'movies' : viewMode === 'series' ? 'series' : 'books';
   if (!movies || movies.length === 0) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3">

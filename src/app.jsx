@@ -5,12 +5,14 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Film, Tv, X } from 'lucide-react';
-import { moviesApi, seriesApi, statusesApi } from './api/supabase.js';
+import { Film, Tv, BookOpen, X } from 'lucide-react';
+import { moviesApi, seriesApi, booksApi, statusesApi } from './api/supabase.js';
+import { googleBooksApi } from './api/googlebooks.js';
 import { tmdbApi } from './api/tmdb.js';
 import config from './config.js';
 import MovieCard from './components/movies/MovieCard.jsx';
 import { SeriesCard } from './components/series/SeriesCard.jsx';
+import BookCard from './components/books/BookCard.jsx';
 import AddItemForm from './components/shared/AddItemForm.jsx';
 import Filters from './components/shared/Filters.jsx';
 import Stats from './components/shared/Stats.jsx';
@@ -61,6 +63,8 @@ const App = () => {
   const [shouldOpenAddMovieAfterLogin, setShouldOpenAddMovieAfterLogin] = useState(false);
   const [fillingTMDB, setFillingTMDB] = useState(false);
   const [tmdbFillStatus, setTMDBFillStatus] = useState('');
+  const [fillingIsbn, setFillingIsbn] = useState(false);
+  const [isbnFillStatus, setIsbnFillStatus] = useState('');
   
   // Genre filter
   const [genres, setGenres] = useState([]);
@@ -78,6 +82,12 @@ const App = () => {
   const [series, setSeries] = useState([]);
   const [allSeries, setAllSeries] = useState([]);
   const [totalSeries, setTotalSeries] = useState(0);
+
+  // Books state (Phase 4)
+  const [bookStatuses, setBookStatuses] = useState([]);
+  const [books, setBooks] = useState([]);
+  const [allBooks, setAllBooks] = useState([]);
+  const [totalBooks, setTotalBooks] = useState(0);
 
   /**
    * useEffect se ejecuta cuando el componente se monta o cuando cambian las dependencias
@@ -105,15 +115,18 @@ const App = () => {
     localStorage.setItem('watchlog_selectedGenre', selectedGenre || '');
   }, [selectedGenre]);
 
-  // Recargar películas/series cuando cambia la página, el filtro o el modo de vista
+  // Recargar películas/series/libros cuando cambia la página, el filtro o el modo de vista
   useEffect(() => {
     if (statuses.length > 0) {
       if (viewMode === 'movies') {
         loadMovies();
         loadAllMovies();
-      } else {
+      } else if (viewMode === 'series') {
         loadSeries();
         loadAllSeries();
+      } else {
+        loadBooks();
+        loadAllBooks();
       }
     }
   }, [currentPage, filterStatus, viewMode]);
@@ -165,6 +178,50 @@ const App = () => {
     }
   };
 
+  // ─── BOOKS LOADERS ────────────────────────────────────────────────────────
+
+  /**
+   * Cargar libros desde Supabase con paginación
+   */
+  const loadBooks = async () => {
+    try {
+      setLoading(true);
+      const statusId = filterStatus === 'all' ? null : parseInt(filterStatus);
+      const data = await booksApi.getAll(currentPage, pageSize, statusId);
+      setBooks(data || []);
+      await loadBooksTotalCount(statusId);
+    } catch (error) {
+      console.error('Error loading books:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Cargar TODOS los libros sin paginación (para búsqueda y stats)
+   */
+  const loadAllBooks = async () => {
+    try {
+      const data = await booksApi.getAll(0, 10000, null);
+      setAllBooks(data || []);
+    } catch (error) {
+      console.error('Error loading all books:', error);
+    }
+  };
+
+  /**
+   * Obtener total de libros (para paginación)
+   */
+  const loadBooksTotalCount = async (statusId = null) => {
+    try {
+      const data = await booksApi.count(statusId);
+      const count = data[0].count;
+      setTotalBooks(count);
+    } catch (error) {
+      console.error('Error loading total books count:', error);
+    }
+  };
+
   /**
    * Cargar datos iniciales (estados, géneros y películas/series)
    */
@@ -177,9 +234,12 @@ const App = () => {
       if (viewMode === 'movies') {
         await loadMovies();
         loadAllMovies();
-      } else {
+      } else if (viewMode === 'series') {
         await loadSeries();
         loadAllSeries();
+      } else {
+        await loadBooks();
+        loadAllBooks();
       }
     } catch (error) {
       console.error('Error loading initial data:', error);
@@ -239,16 +299,21 @@ const App = () => {
 
   /**
    * Cargar estados desde Supabase
-   * Filtra los estados que son solo para books (Reading, Read)
-   * para que no aparezcan en películas y series
+   * - statuses: para películas y series (excluye Reading/Read)
+   * - bookStatuses: para libros (excluye Watched/Watching)
    */
   const loadStatuses = async () => {
     const data = await statusesApi.getAll();
-    // Excluir estados solo para books
-    const filteredStatuses = data?.filter(status => 
+    // Estados para películas/series: excluir los exclusivos de libros
+    const filteredStatuses = data?.filter(status =>
       !['Reading', 'Read'].includes(status.description)
     ) || [];
     setStatuses(filteredStatuses);
+    // Estados para libros: excluir los exclusivos de películas/series
+    const filteredBookStatuses = data?.filter(status =>
+      !['Watched', 'Watching', 'Seen'].includes(status.description)
+    ) || [];
+    setBookStatuses(filteredBookStatuses);
   };
 
   /**
@@ -303,24 +368,24 @@ const App = () => {
    */
   const fillMissingTMDBData = async (moviesToProcess) => {
     setFillingTMDB(true);
-    setTMDBFillStatus('Preparando búsqueda...');
+    setTMDBFillStatus('Preparing search...');
     
     const moviesWithMissingData = moviesToProcess
       .filter((m) => !m.poster_path || !m.year || !m.director || !m.genres)
       .sort((a, b) => b.id - a.id);
     
     if (moviesWithMissingData.length === 0) {
-      setTMDBFillStatus('✅ Toda la información está completa');
+      setTMDBFillStatus('✅ All information is complete');
       setFillingTMDB(false);
       return;
     }
 
-    setTMDBFillStatus(`🎬 Encontradas ${moviesWithMissingData.length} películas incompletas. Iniciando búsqueda...`);
+    setTMDBFillStatus(`🎬 Found ${moviesWithMissingData.length} incomplete movies. Starting search...`);
 
     let updated = 0;
     for (const movie of moviesWithMissingData) {
       try {
-        setTMDBFillStatus(`⏳ Buscando información: ${movie.title}...`);
+        setTMDBFillStatus(`⏳ Fetching info: ${movie.title}...`);
         
         const tmdbData = await tmdbApi.searchMovie(movie.title);
 
@@ -346,22 +411,75 @@ const App = () => {
           if (Object.keys(updates).length > 0) {
             await moviesApi.update(movie.id, updates, user.token);
             updated++;
-            setTMDBFillStatus(`✅ ${updated}/${moviesWithMissingData.length} películas actualizadas`);
+            setTMDBFillStatus(`✅ ${updated}/${moviesWithMissingData.length} movies updated`);
           }
         } else {
-          setTMDBFillStatus(`⚠️ Sin información: ${movie.title}`);
+          setTMDBFillStatus(`⚠️ No info found: ${movie.title}`);
         }
 
         await new Promise((resolve) => setTimeout(resolve, 500));
       } catch (error) {
-        console.error(`Error procesando ${movie.title}:`, error);
-        setTMDBFillStatus(`❌ Error en: ${movie.title}`);
+        console.error(`Error processing ${movie.title}:`, error);
+        setTMDBFillStatus(`❌ Error on: ${movie.title}`);
       }
     }
 
-    setTMDBFillStatus(`🎉 ¡Completado! ${updated} películas actualizadas`);
+    setTMDBFillStatus(`🎉 Done! ${updated} movies updated`);
     await loadAllMovies();
     setFillingTMDB(false);
+  };
+
+  /**
+   * Busca y rellena ISBNs que faltan en libros ya guardados usando Google Books
+   */
+  const fillMissingIsbnData = async (booksToProcess) => {
+    setFillingIsbn(true);
+    setIsbnFillStatus('Preparing search...');
+
+    const booksWithoutIsbn = booksToProcess.filter(b => !b.isbn);
+
+    if (booksWithoutIsbn.length === 0) {
+      setIsbnFillStatus('✅ All books already have an ISBN');
+      setFillingIsbn(false);
+      return;
+    }
+
+    setIsbnFillStatus(`📚 ${booksWithoutIsbn.length} books without ISBN. Starting search...`);
+
+    let updated = 0;
+    for (const book of booksWithoutIsbn) {
+      try {
+        setIsbnFillStatus(`⏳ Looking up ISBN: ${book.title}...`);
+
+        const results = await googleBooksApi.searchByTitle(book.title, 5);
+
+        // Try to match by author first for better accuracy
+        const match =
+          results.find(r =>
+            r.isbn &&
+            book.author &&
+            r.author &&
+            r.author.toLowerCase().includes(book.author.toLowerCase().split(' ')[0])
+          ) || results.find(r => r.isbn);
+
+        if (match?.isbn) {
+          await booksApi.update(book.id, { isbn: match.isbn }, user.token);
+          updated++;
+          setIsbnFillStatus(`✅ ${updated}/${booksWithoutIsbn.length} ISBNs updated`);
+        } else {
+          setIsbnFillStatus(`⚠️ No ISBN found: ${book.title}`);
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } catch (error) {
+        console.error(`Error processing ${book.title}:`, error);
+        setIsbnFillStatus(`❌ Error on: ${book.title}`);
+      }
+    }
+
+    setIsbnFillStatus(`🎉 Done! ${updated} ISBNs updated`);
+    await loadAllBooks();
+    setFillingIsbn(false);
   };
 
   /**
@@ -805,6 +923,171 @@ const App = () => {
     await _updateSeries(seriesId, updates);
   };
 
+  // ─── BOOKS CRUD ───────────────────────────────────────────────────────────
+
+  /**
+   * Añadir libro - versión INTERNA
+   * Crea entrada temporal, busca en Open Library en background
+   */
+  const _addBook = async (title) => {
+    try {
+      const pendingStatus = bookStatuses.find((s) => s.description === 'Pending');
+
+      const tempId = -Date.now();
+      const tempBook = {
+        id: tempId,
+        title: title,
+        author: null,
+        year: null,
+        cover_path: null,
+        genres: null,
+        pages: null,
+        status_id: pendingStatus?.id || bookStatuses[0]?.id || 1,
+        created_at: new Date().toISOString(),
+      };
+
+      setAllBooks((prev) => [tempBook, ...prev]);
+
+      // Buscar en Google Books en background
+      let bookData = {};
+      try {
+        bookData = (await googleBooksApi.searchByTitle(title))?.[0] || {};
+      } catch (err) {
+        console.warn('Google Books search failed:', err);
+      }
+
+      // Actualizar entrada temporal con datos encontrados
+      setAllBooks((prev) =>
+        prev.map((b) =>
+          b.id === tempId
+            ? {
+                ...b,
+                author: bookData.author || null,
+                year: bookData.year || null,
+                cover_path: bookData.cover_path || null,
+                genres: bookData.genres || null,
+                total_pages: bookData.total_pages || null,
+              }
+            : b
+        )
+      );
+
+      // Guardar en BD
+      const createdBook = await booksApi.create({
+        title: title,
+        author: bookData.author || null,
+        year: bookData.year || null,
+        cover_path: bookData.cover_path || null,
+        genres: bookData.genres || null,
+        total_pages: bookData.total_pages || null,
+        status_id: pendingStatus?.id || bookStatuses[0]?.id || 1,
+      }, user.token);
+
+      setAllBooks((prev) =>
+        prev.map((b) => (b.id === tempId ? createdBook[0] || createdBook : b))
+      );
+
+      setCurrentPage(0);
+      setSearchTerm('');
+
+      setTimeout(() => { loadAllBooks(); }, 500);
+    } catch (error) {
+      console.error('Error adding book:', error);
+      alert('Error adding book');
+    }
+  };
+
+  const handleAddBook = async (title) => {
+    if (!requireAuth(() => _addBook(title))) return;
+    await _addBook(title);
+  };
+
+  /**
+   * Cambiar estado de libro - versión INTERNA
+   */
+  const _changeBookStatus = async (bookId, newStatusId) => {
+    const oldAllBooks = allBooks;
+    const oldBooks = books;
+    try {
+      setAllBooks((prev) =>
+        prev.map((b) => b.id === bookId ? { ...b, status_id: newStatusId } : b)
+      );
+      setBooks((prev) =>
+        prev.map((b) => b.id === bookId ? { ...b, status_id: newStatusId } : b)
+      );
+      booksApi.update(bookId, { status_id: newStatusId }, user.token)
+        .catch((error) => {
+          console.error('Error updating book status:', error);
+          setAllBooks(oldAllBooks);
+          setBooks(oldBooks);
+        });
+    } catch (error) {
+      console.error('Error updating book status:', error);
+    }
+  };
+
+  const handleBookStatusChange = async (bookId, newStatusId) => {
+    if (!requireAuth(() => _changeBookStatus(bookId, newStatusId))) return;
+    await _changeBookStatus(bookId, newStatusId);
+  };
+
+  /**
+   * Actualizar rating de libro - versión INTERNA
+   */
+  const _updateBookRating = async (bookId, newRating) => {
+    const oldAllBooks = allBooks;
+    const oldBooks = books;
+    try {
+      setAllBooks((prev) =>
+        prev.map((b) => b.id === bookId ? { ...b, rating: newRating } : b)
+      );
+      setBooks((prev) =>
+        prev.map((b) => b.id === bookId ? { ...b, rating: newRating } : b)
+      );
+      booksApi.update(bookId, { rating: newRating }, user.token)
+        .catch((error) => {
+          console.error('Error updating book rating:', error);
+          setAllBooks(oldAllBooks);
+          setBooks(oldBooks);
+        });
+    } catch (error) {
+      console.error('Error updating book rating:', error);
+    }
+  };
+
+  const handleBookRatingChange = async (bookId, newRating) => {
+    if (!requireAuth(() => _updateBookRating(bookId, newRating))) return;
+    await _updateBookRating(bookId, newRating);
+  };
+
+  /**
+   * Eliminar libro - versión INTERNA
+   */
+  const _deleteBook = async (bookId) => {
+    if (!confirm('Delete this book?')) return;
+    const oldAllBooks = allBooks;
+    const oldBooks = books;
+    try {
+      setAllBooks((prev) => prev.filter((b) => b.id !== bookId));
+      setBooks((prev) => prev.filter((b) => b.id !== bookId));
+      booksApi.delete(bookId, user.token)
+        .catch((error) => {
+          console.error('Error deleting book:', error);
+          setAllBooks(oldAllBooks);
+          setBooks(oldBooks);
+          alert('Error deleting book. Change reverted.');
+        });
+    } catch (error) {
+      console.error('Error deleting book:', error);
+      alert('Error deleting book');
+    }
+  };
+
+  const handleDeleteBook = async (bookId) => {
+    if (!requireAuth(() => _deleteBook(bookId))) return;
+    await _deleteBook(bookId);
+  };
+
   /**
    * Filtrar series según búsqueda, rating y género
    */
@@ -898,9 +1181,27 @@ const App = () => {
   const filteredSeries = searchedSeries.slice(from, to);
   const searchSeriesTotalPages = Math.ceil(searchedSeries.length / pageSize);
 
+  // Filtrar libros según búsqueda, rating y status
+  const searchedBooks = allBooks.filter((book) => {
+    const title = book.title || '';
+    const author = book.author || '';
+    const isbn = book.isbn || '';
+    const searchLower = searchTerm.toLowerCase().trim();
+    const matchesTitle = title.toLowerCase().includes(searchLower);
+    const matchesAuthor = searchLower && author.toLowerCase().includes(searchLower);
+    const matchesIsbn = searchLower && isbn.replace(/[-\s]/g, '').includes(searchLower.replace(/[-\s]/g, ''));
+    const matchesRating = !minRating || (book.rating && book.rating >= minRating);
+    const matchesStatus = filterStatus === 'all' ? true : book.status_id === parseInt(filterStatus);
+    return (matchesTitle || matchesAuthor || matchesIsbn) && matchesRating && matchesStatus;
+  });
+
+  // Aplicar paginación al resultado de búsqueda de books
+  const filteredBooks = searchedBooks.slice(from, to);
+  const searchBooksTotalPages = Math.ceil(searchedBooks.length / pageSize);
+
   // Determinar qué mostrar según el modo de vista
-  const displayList = viewMode === 'movies' ? filteredMovies : filteredSeries;
-  const displayTotal = viewMode === 'movies' ? searchTotalPages : searchSeriesTotalPages;
+  const displayList = viewMode === 'movies' ? filteredMovies : viewMode === 'series' ? filteredSeries : filteredBooks;
+  const displayTotal = viewMode === 'movies' ? searchTotalPages : viewMode === 'series' ? searchSeriesTotalPages : searchBooksTotalPages;
   const displayMovies = viewMode === 'movies';
 
   const handlePrevPage = () => {
@@ -910,7 +1211,7 @@ const App = () => {
   };
 
   const handleNextPage = () => {
-    const maxPage = viewMode === 'movies' ? searchTotalPages : searchSeriesTotalPages;
+    const maxPage = viewMode === 'movies' ? searchTotalPages : viewMode === 'series' ? searchSeriesTotalPages : searchBooksTotalPages;
     if (currentPage < maxPage - 1) {
       setCurrentPage(currentPage + 1);
     }
@@ -981,6 +1282,19 @@ const App = () => {
               >
                 <Tv size={14} className="hidden sm:block" /> Series
               </button>
+              <button
+                onClick={() => {
+                  setViewMode('books');
+                  setCurrentPage(0);
+                }}
+                className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded text-xs sm:text-sm font-semibold flex items-center gap-1 transition whitespace-nowrap ${
+                  viewMode === 'books'
+                    ? 'bg-purple-500 text-white'
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                }`}
+              >
+                <BookOpen size={14} className="hidden sm:block" /> Books
+              </button>
             </div>
           </div>
 
@@ -995,18 +1309,25 @@ const App = () => {
                   } else {
                     fillMissingTMDBData(allMovies);
                   }
+                } else if (viewMode === 'books') {
+                  if (!user) {
+                    setPendingAction(() => () => fillMissingIsbnData(allBooks));
+                    setShowLoginModal(true);
+                  } else {
+                    fillMissingIsbnData(allBooks);
+                  }
                 }
               }}
               disabled={viewMode === 'series'}
               className={`px-3 py-2 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-xs sm:text-sm font-semibold flex-1 sm:flex-none whitespace-nowrap ${viewMode === 'series' ? 'opacity-50 cursor-not-allowed' : ''}`}
-              title="Completa poster, año, director y géneros desde TMDB"
+              title={viewMode === 'movies' ? 'Fill poster, year, director and genres from TMDB' : 'Fill missing ISBNs from Google Books'}
             >
               🔍 Complete
             </button>
             <button
               onClick={() => setShowExportModal(true)}
               className={`px-3 py-2 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-xs sm:text-sm font-semibold flex-1 sm:flex-none whitespace-nowrap`}
-              title={`Exporta tu ${viewMode === 'movies' ? 'librería de películas' : 'librería de series'}`}
+              title={`Exporta tu ${viewMode === 'movies' ? 'librería de películas' : viewMode === 'series' ? 'librería de series' : 'librería de libros'}`}
             >
               💾 Export
             </button>
@@ -1059,9 +1380,15 @@ const App = () => {
 
         {/* Estadísticas */}
         <div className="mb-4 sm:mb-6">
-          <Stats 
-            movies={viewMode === 'movies' ? allMovies : allSeries} 
-            statuses={viewMode === 'movies' ? statuses.filter(s => s.description !== 'Watching') : statuses}
+          <Stats
+            movies={viewMode === 'movies' ? allMovies : viewMode === 'series' ? allSeries : allBooks}
+            statuses={
+              viewMode === 'movies'
+                ? statuses.filter(s => s.description !== 'Watching')
+                : viewMode === 'series'
+                  ? statuses
+                  : bookStatuses
+            }
             filterStatus={filterStatus}
             onFilterChange={handleFilterChange}
           />
@@ -1074,12 +1401,19 @@ const App = () => {
           </div>
         )}
 
+        {/* Status de completar ISBNs */}
+        {fillingIsbn && (
+          <div className="bg-slate-800 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 border border-blue-500">
+            <p className="text-white text-xs sm:text-sm">{isbnFillStatus}</p>
+          </div>
+        )}
+
         {/* Lista de películas/series */}
         {loading ? (
           <LoadingSpinner />
         ) : displayList.length === 0 ? (
           <div className="text-center text-slate-400 py-8 sm:py-12 text-sm sm:text-base">
-            No {viewMode === 'movies' ? 'movies' : 'series'} to show
+            No {viewMode === 'movies' ? 'movies' : viewMode === 'series' ? 'series' : 'books'} to show
           </div>
         ) : (
           <>
@@ -1095,7 +1429,7 @@ const App = () => {
                       onRatingChange={handleRatingChange}
                       user={user}
                     />
-                  ) : (
+                  ) : viewMode === 'series' ? (
                     <SeriesCard
                       series={item}
                       statuses={statuses}
@@ -1103,6 +1437,15 @@ const App = () => {
                       onDelete={handleSeriesDelete}
                       onUpdate={handleSeriesUpdate}
                       onRatingChange={handleSeriesRatingChange}
+                      user={user}
+                    />
+                  ) : (
+                    <BookCard
+                      book={item}
+                      bookStatuses={bookStatuses}
+                      onStatusChange={handleBookStatusChange}
+                      onDelete={handleDeleteBook}
+                      onRatingChange={handleBookRatingChange}
                       user={user}
                     />
                   )}
@@ -1155,7 +1498,7 @@ const App = () => {
           <div className="bg-slate-800 rounded-lg p-4 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4 sm:mb-6">
               <h2 className="text-lg sm:text-xl font-semibold text-white">
-                Add New {viewMode === 'movies' ? 'Movie' : 'Series'}
+                Add New {viewMode === 'movies' ? 'Movie' : viewMode === 'series' ? 'Series' : 'Book'}
               </h2>
               <button
                 onClick={() => setShowAddMovieModal(false)}
@@ -1167,20 +1510,29 @@ const App = () => {
             
             <div>
               {viewMode === 'movies' ? (
-                <AddItemForm 
+                <AddItemForm
                   onAdd={(title) => {
                     handleAddMovie(title);
                     setShowAddMovieModal(false);
                   }}
                   isInModal={true}
                 />
-              ) : (
-                <AddItemForm 
+              ) : viewMode === 'series' ? (
+                <AddItemForm
                   onAdd={(title) => {
                     handleAddSeries(title);
                     setShowAddMovieModal(false);
                   }}
                   placeholder="Series title..."
+                  isInModal={true}
+                />
+              ) : (
+                <AddItemForm
+                  onAdd={(title) => {
+                    handleAddBook(title);
+                    setShowAddMovieModal(false);
+                  }}
+                  placeholder="Book title..."
                   isInModal={true}
                 />
               )}
@@ -1191,8 +1543,8 @@ const App = () => {
 
       {/* Export Modal */}
       {showExportModal && (
-        <Export 
-          movies={viewMode === 'movies' ? allMovies : allSeries}
+        <Export
+          movies={viewMode === 'movies' ? allMovies : viewMode === 'series' ? allSeries : allBooks}
           onClose={() => setShowExportModal(false)}
           viewMode={viewMode}
         />

@@ -11,8 +11,9 @@
 -- Statuses table
 CREATE TABLE IF NOT EXISTS statuses (
   id SERIAL PRIMARY KEY,
-  description VARCHAR(50) NOT NULL UNIQUE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  description VARCHAR(50) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT uk_statuses_description UNIQUE (description)
 );
 
 -- Valid tokens table (for authentication)
@@ -56,6 +57,23 @@ CREATE TABLE IF NOT EXISTS series (
   CONSTRAINT rating_check_series CHECK (rating IS NULL OR (rating >= 0.5 AND rating <= 5 AND rating * 10 % 5 = 0))
 );
 
+-- Books table (PHASE 4)
+CREATE TABLE IF NOT EXISTS books (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  author VARCHAR(255) NOT NULL,
+  year INTEGER,
+  isbn VARCHAR(20),
+  cover_path VARCHAR(500),
+  genres TEXT,
+  total_pages INTEGER,
+  status_id INTEGER NOT NULL REFERENCES statuses(id),
+  rating DECIMAL(2,1) DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT rating_check_books CHECK (rating IS NULL OR (rating >= 0.5 AND rating <= 5 AND rating * 10 % 5 = 0))
+);
+
 -- ============================================
 -- 2. INSERT DEFAULT STATUSES
 -- ============================================
@@ -70,6 +88,12 @@ ON CONFLICT (description) DO NOTHING;
 -- Statuses for Series (4 states - includes Watching)
 INSERT INTO statuses (description) VALUES
   ('Watching')
+ON CONFLICT (description) DO NOTHING;
+
+-- Statuses for Books (4 states - PHASE 4)
+INSERT INTO statuses (description) VALUES
+  ('Reading'),
+  ('Read')
 ON CONFLICT (description) DO NOTHING;
 
 -- ============================================
@@ -115,6 +139,28 @@ CREATE INDEX IF NOT EXISTS idx_series_rating ON series(rating DESC);
 
 -- Index for genres searches (series)
 CREATE INDEX IF NOT EXISTS idx_series_genres ON series(genres);
+
+-- BOOKS INDEXES (PHASE 4)
+-- Index for faster book searches by title
+CREATE INDEX IF NOT EXISTS idx_books_title ON books(title);
+
+-- Index for faster book searches by author
+CREATE INDEX IF NOT EXISTS idx_books_author ON books(author);
+
+-- Index for faster book searches by year
+CREATE INDEX IF NOT EXISTS idx_books_year ON books(year);
+
+-- Index for faster filtering by status (books)
+CREATE INDEX IF NOT EXISTS idx_books_status_id ON books(status_id);
+
+-- Index for rating (books)
+CREATE INDEX IF NOT EXISTS idx_books_rating ON books(rating DESC);
+
+-- Index for genres searches (books)
+CREATE INDEX IF NOT EXISTS idx_books_genres ON books(genres);
+
+-- Index for ISBN lookups
+CREATE INDEX IF NOT EXISTS idx_books_isbn ON books(isbn);
 
 -- ============================================
 -- 4. ENABLE ROW LEVEL SECURITY (RLS)
@@ -192,6 +238,35 @@ CREATE POLICY "Allow delete with valid token"
   ON series FOR DELETE
   USING (check_auth_token());
 
+-- BOOKS RLS POLICIES (PHASE 4)
+-- Enable RLS on books table
+ALTER TABLE books ENABLE ROW LEVEL SECURITY;
+
+-- SELECT: Allow public read (no token required)
+DROP POLICY IF EXISTS "Allow public read access" ON books;
+CREATE POLICY "Allow public read access"
+  ON books FOR SELECT
+  USING (TRUE);
+
+-- INSERT: Require valid token
+DROP POLICY IF EXISTS "Allow insert with valid token" ON books;
+CREATE POLICY "Allow insert with valid token"
+  ON books FOR INSERT
+  WITH CHECK (check_auth_token());
+
+-- UPDATE: Require valid token
+DROP POLICY IF EXISTS "Allow update with valid token" ON books;
+CREATE POLICY "Allow update with valid token"
+  ON books FOR UPDATE
+  USING (check_auth_token())
+  WITH CHECK (check_auth_token());
+
+-- DELETE: Require valid token
+DROP POLICY IF EXISTS "Allow delete with valid token" ON books;
+CREATE POLICY "Allow delete with valid token"
+  ON books FOR DELETE
+  USING (check_auth_token());
+
 -- ============================================
 -- 5. AUTO-UPDATE TIMESTAMP
 -- ============================================
@@ -216,6 +291,13 @@ CREATE TRIGGER update_movies_updated_at
 DROP TRIGGER IF EXISTS update_series_updated_at ON series;
 CREATE TRIGGER update_series_updated_at
   BEFORE UPDATE ON series
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- Create trigger to auto-update timestamp for books (PHASE 4)
+DROP TRIGGER IF EXISTS update_books_updated_at ON books;
+CREATE TRIGGER update_books_updated_at
+  BEFORE UPDATE ON books
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
@@ -261,6 +343,12 @@ ON CONFLICT (token) DO NOTHING;
 -- RIGHT JOIN statuses s ON ser.status_id = s.id 
 -- GROUP BY s.id, s.description;
 
+-- View books count by status (PHASE 4)
+-- SELECT s.description, COUNT(b.id) as count 
+-- FROM books b 
+-- RIGHT JOIN statuses s ON b.status_id = s.id 
+-- GROUP BY s.id, s.description;
+
 -- Mark a token as inactive (revoke access)
 -- UPDATE valid_tokens SET active = false WHERE token = 'token-to-revoke';
 
@@ -269,6 +357,9 @@ ON CONFLICT (token) DO NOTHING;
 
 -- Delete all series (be careful!)
 -- DELETE FROM series;
+
+-- Delete all books (be careful!)
+-- DELETE FROM books;
 
 -- ============================================
 -- MIGRATIONS (IF ADDING NEW COLUMNS TO EXISTING DB)
@@ -287,6 +378,17 @@ ON CONFLICT (token) DO NOTHING;
 -- ALTER TABLE series ENABLE ROW LEVEL SECURITY;
 -- Create all series indexes (copy from section 3 above)
 -- Create all series RLS policies (copy from section 4 above)
+-- Create trigger for auto-timestamp (copy from section 5 above)
+
+-- ============================================
+-- MIGRATIONS (IF ADDING BOOKS TABLE TO EXISTING DB - PHASE 4)
+-- ============================================
+-- Run these if you already have an existing database and want to add books support:
+
+-- Create books table (copy from section 1 above)
+-- ALTER TABLE books ENABLE ROW LEVEL SECURITY;
+-- Create all books indexes (copy from section 3 above)
+-- Create all books RLS policies (copy from section 4 above)
 -- Create trigger for auto-timestamp (copy from section 5 above)
 
 -- ============================================

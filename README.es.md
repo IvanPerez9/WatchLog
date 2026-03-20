@@ -1,6 +1,6 @@
 # WatchLog - Movie Tracker
 
-Aplicación web para gestionar tu biblioteca de películas. Trackea películas vistas, pendientes y en proceso con sincronización automática con TMDB.
+Aplicación web para gestionar tu biblioteca de películas, series y libros. Trackea elementos vistos/leídos, pendientes y en proceso con sincronización automática con TMDB y Google Books.
 
 📖 **Lee esto en**: [English](README.md)
 
@@ -31,7 +31,7 @@ Aplicación web para gestionar tu biblioteca de películas. Trackea películas v
 
 ## 📖 Descripción
 
-Aplicación web para gestionar tu biblioteca de películas. Trackea películas vistas, pendientes y en proceso con sincronización automática con TMDB.
+Aplicación web para gestionar tu biblioteca de películas, series y libros. Trackea elementos vistos/leídos, pendientes y en proceso con sincronización automática con TMDB y Google Books.
 
 ### ¿Por qué existe?
 
@@ -49,13 +49,14 @@ Aplicación web para gestionar tu biblioteca de películas. Trackea películas v
 ## ✨ Características
 
 ### Core
-- 🎬 **Películas y Series** - CRUD completo para películas y series TV
+- 🎬 **Películas, Series y Libros** - CRUD completo para películas, series TV y libros
 - 🔐 **Autenticación segura** - Token-based con validación en base de datos
 - 💾 **Persistencia** - Todos los datos guardados en PostgreSQL (Supabase)
 
 ### Gestión de Estados
 - **Películas**: Pendiente, Vista, Favorita
 - **Series**: Pendiente, Vista, Favorita, Viendo (trackea temporada actual con barra de progreso)
+- **Libros**: Pendiente, Leyendo, Leído, Favorito (seguimiento mediante estado y rating)
 - Seguimiento de temporadas con indicador visual de progreso
 - Muestra 0% de progreso para series pendientes para evitar confusión
 
@@ -68,6 +69,7 @@ Aplicación web para gestionar tu biblioteca de películas. Trackea películas v
 
 ### Datos y Sincronización
 - 🖼️ **Pósters automáticos** - Integración con TMDB
+- 📚 **Metadata de libros** - Integración con Google Books para portadas, páginas, géneros e ISBN
 - ⭐ **Sistema de rating** - Valora con precisión de media estrella
 - 📥 **Exporta datos** - Descarga tu biblioteca como CSV o JSON
 
@@ -158,8 +160,9 @@ Abre http://localhost:3000
 ## 💻 Uso
 
 ### Ver y Buscar
-- 👁️ Cambia entre pestaña Películas y Series
-- 🔍 Busca por título, año o director
+- 👁️ Cambia entre pestañas Películas, Series y Libros
+- 🔍 Busca películas/series por título, año o director
+- 📚 Busca libros por título, autor o ISBN
 - 🎭 Filtra por estado (Pendiente, Vista, Favorita, Viendo)
 - ⭐ Filtra por rating mínimo
 
@@ -174,6 +177,11 @@ Inicia sesión con tu token para:
 - 📺 Trackea temporada actual con botones +/-
 - 📊 Barra de progreso muestra temporadas vistas
 - 📥 Auto-sincronización desde TMDB
+
+### Específico para Libros
+- 📚 Añade libros usando búsqueda en Google Books (título, autor o ISBN)
+- 🔍 Evita duplicados comprobando ISBN en la biblioteca
+- 🧠 Rellena ISBN faltantes en libros existentes usando Google Books
 
 ## 🚀 Deploy
 
@@ -221,12 +229,14 @@ watchlog/
 │   │   │   ├── DeleteButton.jsx
 │   │   │   └── StatusSelector.jsx
 │   │   ├── movies/                # Componentes específicos películas
-│   │   │   ├── MovieCard.jsx
-│   │   │   └── AddMovieForm.jsx
+│   │   │   └── MovieCard.jsx
 │   │   ├── series/                # Componentes específicos series
-│   │   │   ├── SeriesCard.jsx
-│   │   │   └── AddSeriesForm.jsx
+│   │   │   └── SeriesCard.jsx
+│   │   ├── books/                 # Componentes específicos libros
+│   │   │   ├── BookCard.jsx
+│   │   │   └── BookSearchForm.jsx
 │   │   ├── shared/                # Componentes UI compartidos
+│   │   │   ├── AddItemForm.jsx
 │   │   │   ├── Filters.jsx
 │   │   │   ├── Stats.jsx
 │   │   │   └── Export.jsx
@@ -306,12 +316,12 @@ Ver [LICENSE](LICENSE) para más detalles.
 - [x] Mostrar "Actualizado hace X horas" en las tarjetas (usando `updated_at`)
 - [x] Spinners de carga durante la obtención de datos
 
-### Fase 4 - Soporte para Libros
-- [ ] Tabla separada `books` en la base de datos
-- [ ] Integración con Google Books API u OpenLibrary
-- [ ] Componente de libro con autor/ISBN
-- [ ] Búsqueda por ISBN
-- [ ] Gestión de libros (añadir, editar, eliminar, calificar)
+### Fase 4 - Soporte para Libros ✅
+- [x] Tabla separada `books` en la base de datos
+- [x] Integración con Google Books API
+- [x] Componente de libro con autor/ISBN y páginas
+- [x] Búsqueda por ISBN (búsqueda y obtención de metadata)
+- [x] Gestión de libros (añadir, editar, eliminar, calificar)
 
 ### Fase 5 - Características Avanzadas
 - [ ] Listas personalizadas y colecciones

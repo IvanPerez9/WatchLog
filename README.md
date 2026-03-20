@@ -1,6 +1,6 @@
 # WatchLog - Movie Tracker
 
-Web application to manage your movie library. Track watched, pending, and in-progress movies with automatic TMDB synchronization.
+Web application to manage your movies, series and books library. Track watched/read, pending, and in-progress items with automatic TMDB and Google Books synchronization.
 
 📖 **Read this in**: [Español](README.es.md)
 
@@ -34,7 +34,7 @@ See all features in action: authentication, adding movies with poster search, ra
 
 ## 📖 Description
 
-Web application to manage your movie library. Track watched, pending, and in-progress movies with automatic TMDB synchronization.
+Web application to manage your movies, series and books library. Track watched/read, pending, and in-progress items with automatic TMDB and Google Books synchronization.
 
 ### Why does it exist?
 
@@ -52,13 +52,14 @@ Web application to manage your movie library. Track watched, pending, and in-pro
 ## ✨ Features
 
 ### Core
-- 🎬 **Movies & Series** - Complete CRUD for movies and TV series
+- 🎬 **Movies, Series & Books** - Complete CRUD for movies, TV series and books
 - 🔐 **Secure Authentication** - Token-based with database validation
 - 💾 **Persistence** - All data stored in PostgreSQL (Supabase)
 
 ### Status Management
 - **Movies**: Pending, Watched, Favorite
 - **Series**: Pending, Watched, Favorite, Watching (track current season with progress bar)
+- **Books**: Pending, Reading, Read, Favorite (track reading progress via status and rating)
 - Track seasons watched for series with visual progress indicator
 - Shows 0% progress for pending series to avoid confusion
 
@@ -71,6 +72,7 @@ Web application to manage your movie library. Track watched, pending, and in-pro
 
 ### Data and Synchronization
 - 🖼️ **Automatic Posters** - TMDB integration for covers
+- 📚 **Books Metadata** - Google Books integration for covers, pages, genres and ISBN
 - ⭐ **Rating System** - Rate with half-star precision
 - 📥 **Export Data** - Download library as CSV or JSON
 
@@ -163,8 +165,9 @@ Open http://localhost:3000
 ## 💻 Usage
 
 ### View & Search
-- 👁️ Switch between Movies and Series tabs
-- 🔍 Search by title, year, or director
+- 👁️ Switch between Movies, Series and Books tabs
+- 🔍 Search movies/series by title, year, or director
+- 📚 Search books by title, author or ISBN
 - 🎭 Filter by status (Pending, Watched, Favorite, Watching)
 - ⭐ Filter by minimum rating
 
@@ -179,6 +182,11 @@ Sign in with your token to:
 - 📺 Track current season with +/- buttons
 - 📊 Progress bar shows seasons watched
 - 📥 Auto-sync from TMDB
+
+### Books-Specific
+- 📚 Add books using Google Books search (by title, author or ISBN)
+- 🔍 Avoid duplicates by checking existing library ISBNs
+- 🧠 Fill missing ISBNs in existing books using Google Books
 
 ## 🚀 Deploy
 
@@ -226,12 +234,14 @@ watchlog/
 │   │   │   ├── DeleteButton.jsx
 │   │   │   └── StatusSelector.jsx
 │   │   ├── movies/                # Movie-specific components
-│   │   │   ├── MovieCard.jsx
-│   │   │   └── AddMovieForm.jsx
+│   │   │   └── MovieCard.jsx
 │   │   ├── series/                # Series-specific components
-│   │   │   ├── SeriesCard.jsx
-│   │   │   └── AddSeriesForm.jsx
+│   │   │   └── SeriesCard.jsx
+│   │   ├── books/                 # Book-specific components
+│   │   │   ├── BookCard.jsx
+│   │   │   └── BookSearchForm.jsx
 │   │   ├── shared/                # Shared UI components
+│   │   │   ├── AddItemForm.jsx
 │   │   │   ├── Filters.jsx
 │   │   │   ├── Stats.jsx
 │   │   │   └── Export.jsx
@@ -297,12 +307,12 @@ See [LICENSE](LICENSE.md) for more details.
 - [x] Display "Updated X hours ago" on cards (using `updated_at`)
 - [x] Loading spinners during data fetch
 
-### Phase 4 - Books Support
-- [ ] Separate `books` table in database
-- [ ] Google Books API or OpenLibrary integration
-- [ ] Book card component with author/ISBN
-- [ ] ISBN search capability
-- [ ] Books management (add, edit, delete, rate)
+### Phase 4 - Books Support ✅
+- [x] Separate `books` table in database
+- [x] Google Books API integration
+- [x] Book card component with author/ISBN and pages
+- [x] ISBN search capability (search and metadata lookup)
+- [x] Books management (add, edit, delete, rate)
 
 ### Phase 5 - Advanced Features
 - [ ] Custom lists and collections

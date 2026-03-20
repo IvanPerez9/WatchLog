@@ -238,6 +238,93 @@ export const seriesApi = {
 };
 
 /**
+ * API de Books - CRUD completo (Phase 4)
+ */
+export const booksApi = {
+  /**
+   * GET /books - Listar libros con paginación
+   */
+  getAll: async (page = 0, pageSize = 20, statusId = null) => {
+    const from = page * pageSize;
+    const to = from + pageSize - 1;
+
+    let query = `books?select=id,title,author,year,isbn,cover_path,status_id,rating,genres,total_pages,updated_at,status!inner(description)&order=updated_at.desc,id.desc`;
+
+    if (statusId !== null) {
+      query += `&status_id=eq.${statusId}`;
+    }
+
+    try {
+      const result = await supabaseFetch(query, {
+        headers: { 'Range': `${from}-${to}` }
+      });
+      return result;
+    } catch (error) {
+      console.error('❌ Error en booksApi.getAll:', error);
+      return [];
+    }
+  },
+
+  /**
+   * GET /books - Contar total de libros
+   */
+  count: async (statusId = null) => {
+    let query = 'books?select=count';
+    if (statusId !== null) {
+      query += `&status_id=eq.${statusId}`;
+    }
+    return supabaseFetch(query, {
+      headers: { 'Prefer': 'count=exact' }
+    });
+  },
+
+  /**
+   * POST /books - Crear un libro
+   */
+  create: async (book, token) => {
+    return supabaseFetch('books', {
+      method: 'POST',
+      body: JSON.stringify(book),
+    }, token);
+  },
+
+  /**
+   * PATCH /books?id=eq.{id} - Actualizar un libro
+   */
+  update: async (id, updates, token) => {
+    return supabaseFetch(`books?id=eq.${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updates),
+    }, token);
+  },
+
+  /**
+   * DELETE /books?id=eq.{id} - Eliminar un libro
+   */
+  delete: async (id, token) => {
+    return supabaseFetch(`books?id=eq.${id}`, {
+      method: 'DELETE',
+    }, token);
+  },
+
+  /**
+   * GET /books?isbn=eq.{isbn} - Buscar un libro por ISBN en la biblioteca
+   */
+  searchByIsbn: async (isbn) => {
+    const clean = isbn.replace(/[-\s]/g, '');
+    try {
+      const result = await supabaseFetch(
+        `books?isbn=eq.${encodeURIComponent(clean)}&select=id,title,author,year,isbn,cover_path,status_id,rating,genres,total_pages,updated_at,status!inner(description)`
+      );
+      return result;
+    } catch (error) {
+      console.error('❌ Error en booksApi.searchByIsbn:', error);
+      return [];
+    }
+  },
+};
+
+/**
  * API de Status - Solo lectura
  */
 export const statusesApi = {
