@@ -44,7 +44,7 @@ const AddItemForm = ({ onAdd, placeholder = 'Movie title...', isInModal = true }
         >
           <Plus className="w-4 sm:w-5 h-4 sm:h-5" />
           <span className="hidden sm:inline">{loading ? 'Adding...' : 'Add'}</span>
-          <span className="sm:hidden">{loading ? 'Adding' : '+'}</span>
+          {loading && <span className="sm:hidden">Adding</span>}
         </button>
       </form>
     </div>

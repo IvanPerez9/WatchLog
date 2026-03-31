@@ -1,0 +1,45 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - button "WatchLog" [ref=e7] [cursor=pointer]:
+        - img [ref=e8]
+        - heading "WatchLog" [level=1] [ref=e10]
+      - generic [ref=e11]:
+        - button "Movies" [ref=e12] [cursor=pointer]:
+          - img [ref=e13]
+          - text: Movies
+        - button "Series" [ref=e15] [cursor=pointer]:
+          - img [ref=e16]
+          - text: Series
+        - button "Books" [ref=e19] [cursor=pointer]:
+          - img [ref=e20]
+          - text: Books
+    - generic [ref=e22]:
+      - button "🔍 Complete" [ref=e23] [cursor=pointer]
+      - button "💾 Export" [ref=e24] [cursor=pointer]
+      - button "➕ Add" [ref=e25] [cursor=pointer]
+  - generic [ref=e28]:
+    - generic [ref=e29]:
+      - generic [ref=e30]:
+        - img [ref=e31]
+        - textbox "Search by title, director or year..." [ref=e34]
+      - generic [ref=e35]:
+        - generic [ref=e36]: "Search by:"
+        - 'generic "Ej: Interstellar" [ref=e37]': Title
+        - 'generic "Ej: Nolan" [ref=e38]': Director
+        - 'generic "Ej: 2014" [ref=e39]': Year
+    - generic [ref=e41]:
+      - img [ref=e42]
+      - generic [ref=e44]: "Min:"
+      - combobox [ref=e45]:
+        - option "All" [selected]
+        - option "⭐ 0.5+"
+        - option "⭐ 1+"
+        - option "⭐ 1.5+"
+        - option "⭐ 2+"
+        - option "⭐ 2.5+"
+        - option "⭐ 3+"
+        - option "⭐ 3.5+"
+        - option "⭐ 4+"
+        - option "⭐ 4.5+"
+        - option "⭐ 5"
