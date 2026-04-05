@@ -124,7 +124,7 @@ const BookCard = ({ book, bookStatuses, onStatusChange, onDelete, onRatingChange
           <StarRating
             rating={rating}
             hoverRating={hoverRating}
-            statusId={isPending ? (pendingStatus?.id ?? 1) : 0}
+            isPending={isPending}
             onStarClick={handleStarClick}
             onStarHover={handleStarHover}
             onMouseLeave={() => setHoverRating(0)}

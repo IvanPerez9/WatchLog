@@ -18,14 +18,7 @@ const generateCSV = (movies) => {
   
   // Body - convertir cada película a una fila CSV
   const rows = movies.map(movie => {
-    const statusNames = {
-      1: 'Pending',
-      2: 'Watched',
-      3: 'Watching',
-      4: 'Favorite'
-    };
-    
-    const status = statusNames[movie.status_id] || 'Unknown';
+    const status = movie.status?.description || 'Unknown';
     const rating = movie.rating ? movie.rating : '';
     const addedDate = movie.created_at ? new Date(movie.created_at).toLocaleDateString() : '';
     
@@ -74,18 +67,11 @@ export const exportToCSV = (movies) => {
  * @returns {Object} Objeto con metadata y películas
  */
 const generateJSON = (movies) => {
-  const statusNames = {
-    1: 'Pending',
-    2: 'Watched',
-    3: 'Watching',
-    4: 'Favorite'
-  };
-
   const formattedMovies = movies.map(movie => ({
     id: movie.id,
     title: movie.title,
     year: movie.year || null,
-    status: statusNames[movie.status_id] || 'Unknown',
+    status: movie.status?.description || 'Unknown',
     rating: movie.rating || null,
     posterPath: movie.poster_path || null,
     addedDate: movie.created_at ? new Date(movie.created_at).toISOString() : null,

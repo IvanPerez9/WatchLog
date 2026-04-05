@@ -22,10 +22,12 @@ const MovieCard = ({ movie, statuses, onStatusChange, onDelete, onRatingChange, 
   const [hoverRating, setHoverRating] = React.useState(0);
   const rating = movie.rating || 0;
 
+  const pendingStatus = statuses?.find(s => s.description === 'Pending');
+  const isPending = movie.status_id === pendingStatus?.id;
+
   // Handle click on star (detect left or right half)
   const handleStarClick = (starNumber, event) => {
-    // Don't allow rating if status is "Pending" (id = 1)
-    if (movie.status_id === 1) {
+    if (isPending) {
       alert('You can\'t rate a pending movie. Update its status first.');
       return;
     }
@@ -45,8 +47,7 @@ const MovieCard = ({ movie, statuses, onStatusChange, onDelete, onRatingChange, 
 
   // Handle hover for preview
   const handleStarHover = (starNumber, event) => {
-    // Don't allow hover if status is "Pending" (id = 1)
-    if (movie.status_id === 1) {
+    if (isPending) {
       setHoverRating(0);
       return;
     }
@@ -117,7 +118,7 @@ const MovieCard = ({ movie, statuses, onStatusChange, onDelete, onRatingChange, 
           <StarRating
             rating={rating}
             hoverRating={hoverRating}
-            statusId={movie.status_id}
+            isPending={isPending}
             onStarClick={handleStarClick}
             onStarHover={handleStarHover}
             onMouseLeave={() => setHoverRating(0)}
