@@ -32,3 +32,8 @@ lerna-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+# Local tooling artifacts
+.claude/
+.playwright/
+.playwright-mcp/

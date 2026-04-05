@@ -64,8 +64,6 @@ export const moviesApi = {
       query += `&status_id=eq.${statusId}`;
     }
     
-    console.log('🔗 Query final:', query);
-    
     try {
       // Hacer la petición con header Range para paginación
       const result = await supabaseFetch(query, {
@@ -73,10 +71,7 @@ export const moviesApi = {
           'Range': `${from}-${to}`,
         }
       });
-      
-      console.log('📦 Resultado:', result);
-      console.log('📊 Total items:', result?.length || 0);
-      
+
       return result;
     } catch (error) {
       console.error('❌ Error en getAll:', error);
@@ -160,8 +155,6 @@ export const seriesApi = {
       query += `&status_id=eq.${statusId}`;
     }
     
-    console.log('🔗 Series Query final:', query);
-    
     try {
       // Hacer la petición con header Range para paginación
       const result = await supabaseFetch(query, {
@@ -169,10 +162,7 @@ export const seriesApi = {
           'Range': `${from}-${to}`,
         }
       });
-      
-      console.log('📦 Series Resultado:', result);
-      console.log('📊 Total items:', result?.length || 0);
-      
+
       return result;
     } catch (error) {
       console.error('❌ Error en getAll series:', error);

@@ -4,7 +4,7 @@
  * Similar a un @Controller o clase Main en Spring
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Film, Tv, BookOpen, X } from 'lucide-react';
 import { moviesApi, seriesApi, booksApi, statusesApi } from './api/supabase.js';
 import { googleBooksApi } from './api/googlebooks.js';
@@ -33,6 +33,7 @@ const App = () => {
   const [statuses, setStatuses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState(() => {
     return localStorage.getItem('watchlog_filterStatus') || 'all';
   });
@@ -115,6 +116,12 @@ const App = () => {
     localStorage.setItem('watchlog_selectedGenre', selectedGenre || '');
   }, [selectedGenre]);
 
+  // Debounce search term to avoid filtering on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearchTerm(searchTerm), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   // Recargar películas/series/libros cuando cambia la página, el filtro o el modo de vista
   useEffect(() => {
     if (statuses.length > 0) {
@@ -171,7 +178,7 @@ const App = () => {
   const loadSeriesTotalCount = async (statusId = null) => {
     try {
       const data = await seriesApi.count(statusId);
-      const count = data[0].count;
+      const count = data?.[0]?.count ?? 0;
       setTotalSeries(count);
     } catch (error) {
       console.error('Error loading total series count:', error);
@@ -215,7 +222,7 @@ const App = () => {
   const loadBooksTotalCount = async (statusId = null) => {
     try {
       const data = await booksApi.count(statusId);
-      const count = data[0].count;
+      const count = data?.[0]?.count ?? 0;
       setTotalBooks(count);
     } catch (error) {
       console.error('Error loading total books count:', error);
@@ -356,7 +363,7 @@ const App = () => {
   const loadTotalCount = async (statusId = null) => {
     try {
       const data = await moviesApi.count(statusId);
-      const count = data[0].count;
+      const count = data?.[0]?.count ?? 0;
       setTotalMovies(count);
     } catch (error) {
       console.error('Error loading total count:', error);
@@ -488,7 +495,7 @@ const App = () => {
    */
   const _addMovie = async (title) => {
     try {
-      const pendingStatus = statuses.find((s) => s.description === 'Pendiente');
+      const pendingStatus = statuses.find((s) => s.description === 'Pending');
       
       // Crear película temporal con ID negativo (para diferenciarla)
       const tempId = -Date.now();
@@ -738,7 +745,7 @@ const App = () => {
    */
   const _addSeries = async (title) => {
     try {
-      const pendingStatus = statuses.find((s) => s.description === 'Pendiente');
+      const pendingStatus = statuses.find((s) => s.description === 'Pending');
       
       // Crear serie temporal con ID negativo
       const tempId = -Date.now();
@@ -1094,7 +1101,7 @@ const App = () => {
   const searchedSeries = allSeries.filter((serie) => {
     const title = serie.title || '';
     const year = serie.year;
-    const searchLower = searchTerm.toLowerCase().trim();
+    const searchLower = debouncedSearchTerm.toLowerCase().trim();
     
     const matchesTitle = title
       .toLowerCase()
@@ -1131,7 +1138,7 @@ const App = () => {
     const title = movie.title || '';
     const year = movie.year;
     const director = movie.director || '';
-    const searchLower = searchTerm.toLowerCase().trim();
+    const searchLower = debouncedSearchTerm.toLowerCase().trim();
     
     // Buscar por título
     const matchesTitle = title
@@ -1186,7 +1193,7 @@ const App = () => {
     const title = book.title || '';
     const author = book.author || '';
     const isbn = book.isbn || '';
-    const searchLower = searchTerm.toLowerCase().trim();
+    const searchLower = debouncedSearchTerm.toLowerCase().trim();
     const matchesTitle = title.toLowerCase().includes(searchLower);
     const matchesAuthor = searchLower && author.toLowerCase().includes(searchLower);
     const matchesIsbn = searchLower && isbn.replace(/[-\s]/g, '').includes(searchLower.replace(/[-\s]/g, ''));

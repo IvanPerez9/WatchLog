@@ -17,6 +17,8 @@ export const SeriesCard = ({ series, statuses, onDelete, onUpdate, onStatusChang
   });
 
   const currentStatus = statuses?.find(s => s.id === series.status_id);
+  const pendingStatus = statuses?.find(s => s.description === 'Pending');
+  const isPending = series.status_id === pendingStatus?.id;
   const posterUrl = series.poster_path 
     ? `https://image.tmdb.org/t/p/w300${series.poster_path}`
     : 'https://placehold.co/300x450/e5e7eb/6b7280?text=No+Poster';
@@ -38,7 +40,7 @@ export const SeriesCard = ({ series, statuses, onDelete, onUpdate, onStatusChang
   };
 
   const handleStarClick = (starNumber, event) => {
-    if (series.status_id === 1) {
+    if (isPending) {
       alert('You can\'t rate a pending series. Update its status first.');
       return;
     }
@@ -57,7 +59,7 @@ export const SeriesCard = ({ series, statuses, onDelete, onUpdate, onStatusChang
   };
 
   const handleStarHover = (starNumber, event) => {
-    if (series.status_id === 1) {
+    if (isPending) {
       setHoverRating(0);
       return;
     }
@@ -70,10 +72,10 @@ export const SeriesCard = ({ series, statuses, onDelete, onUpdate, onStatusChang
     setHoverRating(hoverValue);
   };
 
-  const progressPercentage = series.total_seasons 
-    ? series.status_id === 1 && editedData.current_season === 1
+  const progressPercentage = series.total_seasons
+    ? isPending && editedData.current_season === 1
       ? 0
-      : (editedData.current_season / series.total_seasons) * 100 
+      : (editedData.current_season / series.total_seasons) * 100
     : 0;
 
   const [showStatusMenu, setShowStatusMenu] = useState(false);
@@ -126,14 +128,14 @@ export const SeriesCard = ({ series, statuses, onDelete, onUpdate, onStatusChang
           <StarRating
             rating={series.rating || 0}
             hoverRating={hoverRating}
-            statusId={series.status_id}
+            isPending={isPending}
             onStarClick={handleStarClick}
             onStarHover={handleStarHover}
             onMouseLeave={() => setHoverRating(0)}
             showText={series.rating > 0}
             pendingMessage="Rate when you watch it"
           />
-          {!series.rating && series.status_id !== 1 && (
+          {!series.rating && !isPending && (
             <span className="text-xs text-slate-400">-</span>
           )}
         </div>

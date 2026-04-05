@@ -11,7 +11,7 @@ import { getRatingText } from '../../utils/ratingUtils.js';
 export const StarRating = ({
   rating = 0,
   hoverRating = 0,
-  statusId = 1,
+  isPending = false,
   onStarClick,
   onStarHover,
   onMouseLeave,
@@ -30,11 +30,11 @@ export const StarRating = ({
             onMouseMove={(e) => onStarHover(starNumber, e)}
             onMouseLeave={onMouseLeave}
             className={`transition transform flex-shrink-0 ${
-              statusId !== 1 ? 'hover:scale-110 cursor-pointer' : 'cursor-not-allowed opacity-50'
+              !isPending ? 'hover:scale-110 cursor-pointer' : 'cursor-not-allowed opacity-50'
             }`}
-            disabled={statusId === 1}
+            disabled={isPending}
             title={
-              statusId === 1 
+              isPending
                 ? 'Rate when you change the status'
                 : 'Left click for ½ star'
             }
@@ -58,7 +58,7 @@ export const StarRating = ({
           {getRatingText(rating)}
         </span>
       )}
-      {pendingMessage && statusId === 1 && (
+      {pendingMessage && isPending && (
         <span className="text-xs text-slate-400 italic">
           {pendingMessage}
         </span>
