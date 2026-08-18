@@ -20,8 +20,47 @@ Copy `.env.example` to `.env` and fill in:
 - `VITE_SUPABASE_ANON_KEY` — Supabase anonymous key
 - `VITE_TMDB_API_KEY` — The Movie Database API key
 - `VITE_AUTH_TOKEN` — App access token (validated server-side against `valid_tokens` table)
+- `VITE_GOOGLE_BOOKS_API_KEY` — (Optional) Google Books API key for better rate limits
+
+### Google Books API Key (Optional)
+
+Without a key: ~1000 requests/day shared by IP.  
+With a key: 1000 requests/day per project (more with billing).
+
+To get a key:
+1. Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+2. Create a project (or use existing)
+3. Enable [Google Books API](https://console.cloud.google.com/apis/library/books.googleapis.com)
+4. **Create credentials > API key**
+5. Copy the key to `VITE_GOOGLE_BOOKS_API_KEY` in `.env`
 
 `src/config.js` validates these at startup and throws if required vars are missing.
+
+### Netlify Deployment
+
+This project is deployed on **Netlify**. Environment variables must be configured in the Netlify dashboard.
+
+To set up environment variables in Netlify:
+1. Go to [app.netlify.com](https://app.netlify.com)
+2. Select your site → **Site settings**
+3. Scroll to **Build & deploy → Environment variables**
+4. Click **Add a variable** and add each required variable
+
+Required variables for production:
+```
+VITE_SUPABASE_URL = <your-supabase-url>
+VITE_SUPABASE_ANON_KEY = <your-supabase-anon-key>
+VITE_TMDB_API_KEY = <your-tmdb-api-key>
+VITE_AUTH_TOKEN = <your-auth-token>
+VITE_GOOGLE_BOOKS_API_KEY = <your-google-books-api-key> (optional)
+```
+
+**Important:** Variables prefixed with `VITE_` are embedded into the client bundle at build time. Never commit actual values to git — use Netlify's dashboard instead.
+
+Netlify CLI alternative:
+```bash
+netlify env:set VITE_GOOGLE_BOOKS_API_KEY "your-key-here"
+```
 
 ## Architecture
 

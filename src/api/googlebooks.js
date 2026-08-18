@@ -1,10 +1,14 @@
 /**
  * Cliente HTTP para Google Books API
- * No requiere API key para búsquedas básicas (hasta ~1000 req/día)
+ * Opcional: Configura VITE_GOOGLE_BOOKS_API_KEY en .env para mejor cuota
+ * Sin key: ~1000 req/día (compartido por IP)
+ * Con key: 1000 req/día propio (más si agregas billing)
  * Documentación: https://developers.google.com/books/docs/v1/using
  */
 
 const GOOGLE_BOOKS_API = 'https://www.googleapis.com/books/v1';
+const API_KEY = import.meta.env.VITE_GOOGLE_BOOKS_API_KEY || '';
+const KEY_PARAM = API_KEY ? `&key=${API_KEY}` : '';
 
 const normalizeVolume = (item) => {
   const info = item.volumeInfo || {};
@@ -45,8 +49,12 @@ export const googleBooksApi = {
     try {
       const query = encodeURIComponent(`intitle:${title.trim()}`);
       const response = await fetch(
-        `${GOOGLE_BOOKS_API}/volumes?q=${query}&maxResults=${maxResults}&printType=books`
+        `${GOOGLE_BOOKS_API}/volumes?q=${query}&maxResults=${maxResults}&printType=books${KEY_PARAM}`
       );
+      if (response.status === 429) {
+        console.warn('Google Books API rate limit exceeded (429). Try again later or check API key.');
+        return [];
+      }
       if (!response.ok) return [];
       const data = await response.json();
       if (!data.items) return [];
@@ -66,8 +74,12 @@ export const googleBooksApi = {
     try {
       const query = encodeURIComponent(`inauthor:${author.trim()}`);
       const response = await fetch(
-        `${GOOGLE_BOOKS_API}/volumes?q=${query}&maxResults=${maxResults}&printType=books`
+        `${GOOGLE_BOOKS_API}/volumes?q=${query}&maxResults=${maxResults}&printType=books${KEY_PARAM}`
       );
+      if (response.status === 429) {
+        console.warn('Google Books API rate limit exceeded (429). Try again later or check API key.');
+        return [];
+      }
       if (!response.ok) return [];
       const data = await response.json();
       if (!data.items) return [];
@@ -86,8 +98,12 @@ export const googleBooksApi = {
       const clean = isbn.replace(/[-\s]/g, '');
       const query = encodeURIComponent(`isbn:${clean}`);
       const response = await fetch(
-        `${GOOGLE_BOOKS_API}/volumes?q=${query}&maxResults=5&printType=books`
+        `${GOOGLE_BOOKS_API}/volumes?q=${query}&maxResults=5&printType=books${KEY_PARAM}`
       );
+      if (response.status === 429) {
+        console.warn('Google Books API rate limit exceeded (429). Try again later or check API key.');
+        return [];
+      }
       if (!response.ok) return [];
       const data = await response.json();
       if (!data.items) return [];

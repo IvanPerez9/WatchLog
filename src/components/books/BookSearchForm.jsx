@@ -66,7 +66,7 @@ const BookSearchForm = ({ onAddBook, statuses, user }) => {
     try {
       const bookToAdd = {
         title: selectedBook.title,
-        author: selectedBook.author,
+        author: selectedBook.author || 'Desconocido',
         year: selectedBook.year,
         isbn: selectedBook.isbn,
         cover_path: selectedBook.cover_path,
