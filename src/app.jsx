@@ -979,10 +979,10 @@ const App = () => {
         )
       );
 
-      // Guardar en BD
+      // Guardar en BD - author es NOT NULL en Supabase
       const createdBook = await booksApi.create({
         title: title,
-        author: bookData.author || null,
+        author: bookData.author || 'Desconocido',
         year: bookData.year || null,
         cover_path: bookData.cover_path || null,
         genres: bookData.genres || null,
